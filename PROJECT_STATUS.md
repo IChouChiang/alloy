@@ -162,6 +162,7 @@ $$
 - 2026-02-14: Added generic benchmark entry `alloy/benchmarks/supervised_runner.py` and switched `train_case39` to use it; `case39_runner` is now a thin compatibility wrapper.
 - 2026-02-14: Added generic re-evaluation command `python -m alloy.experiments.reevaluate_benchmark --run-dir <path> --train-entrypoint <module:function>`; legacy `reevaluate_run` now delegates to it.
 - 2026-02-14: Added generic benchmark execution command `python -m alloy.experiments.run_benchmark --config <json> --train-entrypoint <module:function>` with optional `--run-dir` and `--epochs` overrides.
+- 2026-02-14: Extracted case39 assembly into `alloy/benchmarks/presets/case39.py`; `train_case39.py` is now a thin preset wrapper over generic supervised runner.
 
 ### Multi-Layer Configuration
 ```
