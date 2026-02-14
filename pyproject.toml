@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alloy"
+version = "0.1.0"
+description = "Physics-Guided Graph Convolution Neural Network for Optimal Power Flow"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.20",
+    "pandas>=1.3",
+    "torch>=2.0",
+    "pandapower>=2.10",
+]
+
+[tool.setuptools]
+package-dir = { "" = "." }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["alloy*"]

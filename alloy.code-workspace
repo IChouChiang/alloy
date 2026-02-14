@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../miniconda3/envs/alloy311/lib/python3.11/site-packages/pandapower"
+		}
+	],
+	"settings": {}
+}
