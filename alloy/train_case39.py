@@ -13,7 +13,7 @@ import torch
 from torch.utils.data import DataLoader
 from pandapower.auxiliary import pandapowerNet
 
-from alloy.benchmarks.case39_runner import run_case39_benchmark
+from alloy.benchmarks.supervised_runner import run_supervised_benchmark
 from alloy.data.dataset import (
     MaterializedCase39Dataset,
     ScenarioListDataset,
@@ -227,7 +227,7 @@ def train_case39(experiment: ExperimentConfig) -> dict[str, float]:
 
     pg_threshold_pu = 1.0 / float(net.sn_mva)
     vg_threshold_pu = 1e-3
-    return run_case39_benchmark(
+    return run_supervised_benchmark(
         experiment=experiment,
         model=model,
         trainer=trainer,
