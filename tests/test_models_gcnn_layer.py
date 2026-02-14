@@ -1,9 +1,4 @@
-"""
-Unit tests for alloy.models.gcnn_layer module.
-
-Tests verify that graph convolution layer produces correct shapes,
-initializes properly, and applies physics-guided aggregation correctly.
-"""
+"""Unit tests for the canonical GSGCNLayer export in alloy.models."""
 
 from typing import cast
 

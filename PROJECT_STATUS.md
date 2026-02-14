@@ -154,6 +154,8 @@ $$
 - 2026-02-14: Started plugin-style model organization by adding `alloy/models/gcnn_gao_01` adapters and exposing compatibility aliases in `alloy/models/__init__.py`.
 - 2026-02-14: Standardized run re-evaluation via CLI `python -m alloy.experiments.reevaluate_run --run-dir <path>` to replace ad-hoc temporary scripts.
 - 2026-02-14: Added model registry (`alloy/models/registry.py`) and switched training/tuning model construction to registry-based `model_name` selection (default: `01_gcnn_gao`).
+- 2026-02-14: Initialized git baseline with artifact exclusions (`runs/`, `data/`, caches) and committed repository snapshot.
+- 2026-02-14: Removed legacy `alloy/models/gcnn.py` and `alloy/models/gcnn_layer.py`; `gcnn_gao_01` is now the canonical implementation path.
 
 ### Multi-Layer Configuration
 ```

@@ -1,8 +1,4 @@
-"""
-Unit tests for alloy.models.gcnn module.
-
-Minimal tests for the GCNN model forward shape and initialization.
-"""
+"""Unit tests for the canonical GCNN model export in alloy.models."""
 
 from typing import cast
 
