@@ -1,17 +1,15 @@
-"""Re-evaluate an existing case39 run and append updated metrics.
+"""Compatibility wrapper for re-evaluating completed runs.
 
-This command loads the original run config, overrides training epochs to 0,
-loads the best checkpoint, and executes evaluation metrics logging only.
+Prefer using `alloy.experiments.reevaluate_benchmark` for configurable
+benchmark entrypoint selection.
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
 
-from alloy.experiments.experiment_config import ExperimentConfig
-from alloy.train_case39 import train_case39
+from alloy.experiments.reevaluate_benchmark import reevaluate_benchmark
 
 
 def reevaluate_run(run_dir: Path) -> dict[str, float]:
@@ -23,31 +21,16 @@ def reevaluate_run(run_dir: Path) -> dict[str, float]:
     Returns:
         Dictionary of re-evaluated metrics.
 
-    Raises:
-        FileNotFoundError: If config file is missing.
-        ValueError: If config payload is malformed.
+    Returns:
+        Dictionary of re-evaluated metrics.
     """
-    config_path = run_dir / "config.json"
-    if not config_path.exists():
-        raise FileNotFoundError(f"Run config not found: {config_path}")
-
-    raw = json.loads(config_path.read_text(encoding="utf-8"))
-    training = raw.get("training")
-    if not isinstance(training, dict):
-        raise ValueError("Invalid run config: missing 'training' mapping")
-
-    training["epochs"] = 0
-    training["run_dir"] = str(run_dir)
-    raw["training"] = training
-
-    experiment = ExperimentConfig.from_dict(raw)
-    return train_case39(experiment)
+    return reevaluate_benchmark(run_dir)
 
 
 def main() -> None:
     """CLI entry for re-evaluating a run directory."""
     parser = argparse.ArgumentParser(
-        description="Re-evaluate a completed case39 run and append metrics."
+        description="Re-evaluate a completed run and append metrics."
     )
     parser.add_argument(
         "--run-dir",

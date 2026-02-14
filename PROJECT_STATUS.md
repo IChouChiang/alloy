@@ -160,6 +160,7 @@ $$
 - 2026-02-14: Introduced benchmark layering via `alloy/benchmarks/case39_runner.py`; `train_case39` now focuses on model/data assembly while runner executes standardized train/eval/checkpoint workflow.
 - 2026-02-14: Added `.editorconfig` to stabilize formatter behavior and reduce accidental whitespace-only diffs in Python and config files.
 - 2026-02-14: Added generic benchmark entry `alloy/benchmarks/supervised_runner.py` and switched `train_case39` to use it; `case39_runner` is now a thin compatibility wrapper.
+- 2026-02-14: Added generic re-evaluation command `python -m alloy.experiments.reevaluate_benchmark --run-dir <path> --train-entrypoint <module:function>`; legacy `reevaluate_run` now delegates to it.
 
 ### Multi-Layer Configuration
 ```
