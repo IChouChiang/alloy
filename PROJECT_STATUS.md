@@ -157,6 +157,7 @@ $$
 - 2026-02-14: Initialized git baseline with artifact exclusions (`runs/`, `data/`, caches) and committed repository snapshot.
 - 2026-02-14: Removed legacy `alloy/models/gcnn.py` and `alloy/models/gcnn_layer.py`; `gcnn_gao_01` is now the canonical implementation path.
 - 2026-02-14: Added plugin input adapters (`alloy/models/gcnn_gao_01/adapters.py`) and refactored training/tuning to reuse unified model input mapping.
+- 2026-02-14: Introduced benchmark layering via `alloy/benchmarks/case39_runner.py`; `train_case39` now focuses on model/data assembly while runner executes standardized train/eval/checkpoint workflow.
 
 ### Multi-Layer Configuration
 ```
