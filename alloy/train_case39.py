@@ -33,6 +33,7 @@ from alloy.experiments.experiment_config import (
 )
 from alloy.experiments.experiment_logger import ExperimentLogger
 from alloy.losses import supervised_mse_loss
+from alloy.models.gcnn_gao_01 import model_inputs_from_batch
 from alloy.models.registry import create_model
 from alloy.training import GCNNBatchBuilder, Trainer, TrainingConfig
 
@@ -288,15 +289,7 @@ def train_case39(experiment: ExperimentConfig) -> dict[str, float]:
             batch: object,
         ) -> tuple[dict[str, torch.Tensor], torch.Tensor]:
             batch_dict = cast(dict[str, torch.Tensor], batch)
-            model_inputs = {
-                "node_features": batch_dict["node_features"],
-                "pd": batch_dict["pd"],
-                "qd": batch_dict["qd"],
-                "g_diag": topology["g_diag"],
-                "b_diag": topology["b_diag"],
-                "g_nd": topology["g_nd"],
-                "b_nd": topology["b_nd"],
-            }
+            model_inputs = model_inputs_from_batch(batch_dict, topology)
             return model_inputs, batch_dict["targets"]
 
         batch_to_inputs_fn = batch_to_inputs_materialized

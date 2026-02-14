@@ -19,6 +19,7 @@ from alloy.data.dataset import (
     load_case39_topology_tensors,
 )
 from alloy.experiments.experiment_config import Case39ModelConfig
+from alloy.models.gcnn_gao_01 import model_inputs_from_batch
 from alloy.models.registry import available_models, create_model
 
 
@@ -215,17 +216,17 @@ def tune_batch_sizes(config: BatchTuningConfig) -> list[TuneRow]:
                     epoch_steps = 0
                     for batch in epoch_iter:
                         batch_dict = cast(dict[str, torch.Tensor], batch)
-                        model_inputs = {
+                        batch_on_device = {
                             "node_features": batch_dict["node_features"].to(
                                 config.device
                             ),
                             "pd": batch_dict["pd"].to(config.device),
                             "qd": batch_dict["qd"].to(config.device),
-                            "g_diag": topology_on_device["g_diag"],
-                            "b_diag": topology_on_device["b_diag"],
-                            "g_nd": topology_on_device["g_nd"],
-                            "b_nd": topology_on_device["b_nd"],
                         }
+                        model_inputs = model_inputs_from_batch(
+                            batch_on_device,
+                            topology_on_device,
+                        )
                         targets = batch_dict["targets"].to(config.device)
 
                         preds = model(**model_inputs)
@@ -384,15 +385,12 @@ def _evaluate_loss(
     count = 0
     for batch in dataloader:
         batch_dict = cast(dict[str, torch.Tensor], batch)
-        model_inputs = {
+        batch_on_device = {
             "node_features": batch_dict["node_features"].to(device),
             "pd": batch_dict["pd"].to(device),
             "qd": batch_dict["qd"].to(device),
-            "g_diag": topology["g_diag"],
-            "b_diag": topology["b_diag"],
-            "g_nd": topology["g_nd"],
-            "b_nd": topology["b_nd"],
         }
+        model_inputs = model_inputs_from_batch(batch_on_device, topology)
         targets = batch_dict["targets"].to(device)
         preds = model(**model_inputs)
         total_loss += float(loss_fn(preds, targets).item())

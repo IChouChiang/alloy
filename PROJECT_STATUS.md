@@ -156,6 +156,7 @@ $$
 - 2026-02-14: Added model registry (`alloy/models/registry.py`) and switched training/tuning model construction to registry-based `model_name` selection (default: `01_gcnn_gao`).
 - 2026-02-14: Initialized git baseline with artifact exclusions (`runs/`, `data/`, caches) and committed repository snapshot.
 - 2026-02-14: Removed legacy `alloy/models/gcnn.py` and `alloy/models/gcnn_layer.py`; `gcnn_gao_01` is now the canonical implementation path.
+- 2026-02-14: Added plugin input adapters (`alloy/models/gcnn_gao_01/adapters.py`) and refactored training/tuning to reuse unified model input mapping.
 
 ### Multi-Layer Configuration
 ```
