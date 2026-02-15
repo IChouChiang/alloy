@@ -176,6 +176,10 @@ $$
 - 2026-02-15: Refined canvas pan event capture and viewport clipping to fix premature panning stop and eliminate page-level right-side blank overflow.
 - 2026-02-15: Switched canvas panning to pointer-capture mode for continuous drag responsiveness and tightened root viewport overflow containment.
 - 2026-02-15: Changed canvas zoom interaction to direct mouse wheel zoom (no Ctrl) to avoid browser-level Ctrl+wheel conflicts.
+- 2026-02-15: Added visual connection and ports between Case Select and Load Config cards, and refactored Load Config into Bounds + Strategy sections with `bounded_uniform` UI mode.
+- 2026-02-15: Improved card text operability by making card body text selectable and restricting drag gesture to header handle only.
+- 2026-02-15: Updated card drag behavior to allow dragging from non-text blank areas while preserving text selection, and moved/clarified bounds-strategy guidance in Load Config.
+- 2026-02-15: Fixed Load Config grid alignment so section dividers/titles stay full-width and labels/controls keep stable left-right columns.
 
 ### Multi-Layer Configuration
 ```

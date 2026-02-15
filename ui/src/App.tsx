@@ -18,7 +18,7 @@ type Point = {
   y: number
 }
 
-type ScaleSamplingMode = 'truncated_normal' | 'uniform_bins'
+type ScaleSamplingMode = 'truncated_normal' | 'uniform_bins' | 'bounded_uniform'
 
 const PANDAPOWER_BASECASES = [
   'case4gs',
@@ -218,6 +218,17 @@ function App() {
     startOffsetY: 0,
   })
 
+  const baselineHeight = baselineRef.current?.offsetHeight ?? 156
+  const loadHeight = loadConfigRef.current?.offsetHeight ?? 292
+  const baselineOutputPort = {
+    x: cardPos.x + BASELINE_CARD_WIDTH,
+    y: cardPos.y + baselineHeight / 2,
+  }
+  const loadInputPort = {
+    x: loadCardPos.x,
+    y: loadCardPos.y + loadHeight / 2,
+  }
+
   const clampZoom = useCallback((value: number) => {
     return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value))
   }, [MAX_ZOOM, MIN_ZOOM])
@@ -324,6 +335,28 @@ function App() {
     window.addEventListener('pointerup', handlePointerUp)
   }
 
+  const shouldStartCardDrag = (event: React.PointerEvent<HTMLElement>) => {
+    const target = event.target as HTMLElement | null
+    if (!target) {
+      return false
+    }
+    if (
+      target.closest(
+        'button, input, select, textarea, option, .card-drag-handle, .baseline-title, .baseline-note, .baseline-label, .zoom-btn, .canvas-toolbar, p, span, label'
+      )
+    ) {
+      return false
+    }
+    return true
+  }
+
+  const handleBaselineCardPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!shouldStartCardDrag(event)) {
+      return
+    }
+    handleDragStart(event)
+  }
+
   const handleLoadCardDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!canvasRef.current || !loadConfigRef.current) {
       return
@@ -336,6 +369,13 @@ function App() {
     loadCardDragState.current.offsetY = (event.clientY - cardRect.top) / canvasZoom
     window.addEventListener('pointermove', handleLoadCardPointerMove)
     window.addEventListener('pointerup', handleLoadCardPointerUp)
+  }
+
+  const handleLoadCardPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!shouldStartCardDrag(event)) {
+      return
+    }
+    handleLoadCardDragStart(event)
   }
 
   const handleCanvasWheel = (event: React.WheelEvent<HTMLDivElement>) => {
@@ -448,13 +488,22 @@ function App() {
                         className="canvas-content"
                         style={{ transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${canvasZoom})` }}
                       >
+                      <svg className="canvas-links" aria-hidden="true">
+                        <line
+                          x1={baselineOutputPort.x}
+                          y1={baselineOutputPort.y}
+                          x2={loadInputPort.x}
+                          y2={loadInputPort.y}
+                          className="canvas-link-line"
+                        />
+                      </svg>
                       <div
                         className={`baseline-card${isDragging ? ' dragging' : ''}`}
                         ref={baselineRef}
                         style={{ left: `${cardPos.x}px`, top: `${cardPos.y}px` }}
-                        onPointerDown={handleDragStart}
+                        onPointerDown={handleBaselineCardPointerDown}
                       >
-                        <div className="baseline-header">
+                        <div className={`baseline-header card-drag-handle${isDragging ? ' dragging' : ''}`} onPointerDown={handleDragStart}>
                           <span className="baseline-title">Baseline</span>
                           <button
                             type="button"
@@ -492,14 +541,18 @@ function App() {
                             ? 'Basecase selection is locked to prevent accidental edits.'
                             : 'Basecase selection is unlocked for editing.'}
                         </p>
+                        <span className="card-port card-port-output" title="Output: basecase context" />
                       </div>
                       <div
                         className={`load-config-card${isLoadCardDragging ? ' dragging' : ''}`}
                         ref={loadConfigRef}
                         style={{ left: `${loadCardPos.x}px`, top: `${loadCardPos.y}px` }}
-                        onPointerDown={handleLoadCardDragStart}
+                        onPointerDown={handleLoadCardPointerDown}
                       >
-                        <div className="baseline-header">
+                        <div
+                          className={`baseline-header card-drag-handle${isLoadCardDragging ? ' dragging' : ''}`}
+                          onPointerDown={handleLoadCardDragStart}
+                        >
                           <span className="baseline-title">Load Config</span>
                           <button
                             type="button"
@@ -516,48 +569,10 @@ function App() {
                         </div>
 
                         <div className="load-config-grid">
-                          <label className="baseline-label" htmlFor="scale-mode-select">Mode</label>
-                          <select
-                            id="scale-mode-select"
-                            className="baseline-select"
-                            value={scaleSamplingMode}
-                            disabled={isLoadConfigLocked}
-                            onChange={(event) => setScaleSamplingMode(event.target.value as ScaleSamplingMode)}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onMouseDown={(event) => event.stopPropagation()}
-                          >
-                            <option value="truncated_normal">truncated_normal</option>
-                            <option value="uniform_bins">uniform_bins</option>
-                          </select>
+                          <span className="load-section-title">Bounds</span>
+                          <span className="load-section-spacer" />
 
-                          <label className="baseline-label" htmlFor="global-scale-mu">Global μ</label>
-                          <input
-                            id="global-scale-mu"
-                            className="load-input"
-                            type="number"
-                            step="0.01"
-                            value={globalScaleMu}
-                            disabled={isLoadConfigLocked}
-                            onChange={(event) => setGlobalScaleMu(Number(event.target.value))}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onMouseDown={(event) => event.stopPropagation()}
-                          />
-
-                          <label className="baseline-label" htmlFor="global-scale-sigma">Global σ</label>
-                          <input
-                            id="global-scale-sigma"
-                            className="load-input"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={globalScaleSigma}
-                            disabled={isLoadConfigLocked}
-                            onChange={(event) => setGlobalScaleSigma(Number(event.target.value))}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onMouseDown={(event) => event.stopPropagation()}
-                          />
-
-                          <label className="baseline-label" htmlFor="global-scale-min">Scale min</label>
+                          <label className="baseline-label" htmlFor="global-scale-min">Lower bound (g_min)</label>
                           <input
                             id="global-scale-min"
                             className="load-input"
@@ -570,7 +585,7 @@ function App() {
                             onMouseDown={(event) => event.stopPropagation()}
                           />
 
-                          <label className="baseline-label" htmlFor="global-scale-max">Scale max</label>
+                          <label className="baseline-label" htmlFor="global-scale-max">Upper bound (g_max)</label>
                           <input
                             id="global-scale-max"
                             className="load-input"
@@ -582,6 +597,67 @@ function App() {
                             onPointerDown={(event) => event.stopPropagation()}
                             onMouseDown={(event) => event.stopPropagation()}
                           />
+
+                          <span className="load-bounds-hint">Global load factor g is clipped to [g_min, g_max], e.g. 0.5-1.5 means 50%-150% of base load.</span>
+                          <span className="load-section-spacer" />
+
+                          <span className="load-strategy-hint">
+                            {scaleSamplingMode === 'truncated_normal'
+                              ? 'Truncated normal: sample g~N(μ,σ), reject values outside [g_min, g_max].'
+                              : scaleSamplingMode === 'uniform_bins'
+                                ? 'Uniform bins: split [g_min, g_max] into bins, cycle bins, then uniformly sample within selected bin.'
+                                : 'Bounded uniform: directly sample g uniformly in [g_min, g_max].'}
+                          </span>
+                          <span className="load-section-spacer" />
+
+                          <span className="load-section-title">Strategy</span>
+                          <span className="load-section-spacer" />
+
+                          <label className="baseline-label" htmlFor="scale-mode-select">Mode</label>
+                          <select
+                            id="scale-mode-select"
+                            className="baseline-select"
+                            value={scaleSamplingMode}
+                            disabled={isLoadConfigLocked}
+                            onChange={(event) => setScaleSamplingMode(event.target.value as ScaleSamplingMode)}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}
+                          >
+                            <option value="truncated_normal">truncated_normal</option>
+                            <option value="uniform_bins">uniform_bins</option>
+                            <option value="bounded_uniform">bounded_uniform</option>
+                          </select>
+
+                          {scaleSamplingMode === 'truncated_normal' ? (
+                            <>
+                              <label className="baseline-label" htmlFor="global-scale-mu">Global μ</label>
+                              <input
+                                id="global-scale-mu"
+                                className="load-input"
+                                type="number"
+                                step="0.01"
+                                value={globalScaleMu}
+                                disabled={isLoadConfigLocked}
+                                onChange={(event) => setGlobalScaleMu(Number(event.target.value))}
+                                onPointerDown={(event) => event.stopPropagation()}
+                                onMouseDown={(event) => event.stopPropagation()}
+                              />
+
+                              <label className="baseline-label" htmlFor="global-scale-sigma">Global σ</label>
+                              <input
+                                id="global-scale-sigma"
+                                className="load-input"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={globalScaleSigma}
+                                disabled={isLoadConfigLocked}
+                                onChange={(event) => setGlobalScaleSigma(Number(event.target.value))}
+                                onPointerDown={(event) => event.stopPropagation()}
+                                onMouseDown={(event) => event.stopPropagation()}
+                              />
+                            </>
+                          ) : null}
 
                           {scaleSamplingMode === 'uniform_bins' ? (
                             <>
@@ -616,13 +692,11 @@ function App() {
                           />
                         </div>
 
-                        <p className="baseline-note">
-                          {scaleSamplingMode === 'truncated_normal'
-                            ? 'Mode uses truncated normal for global scale with [min, max] bounds.'
-                            : 'Mode cycles bins across [min, max], then samples uniformly inside each selected bin.'}
-                        </p>
+                        <p className="baseline-note">Current process: define bounds first, then apply selected strategy.</p>
                         {/* TODO(alloy-ui): wire Load Config state to backend DatasetBuildConfig/SampleGenerationConfig payload. */}
                         {/* TODO(alloy-ui): add inline validation for min<max, sigma>0, and bins>=1 with field-level hints. */}
+                        {/* TODO(alloy-ui): backend currently supports truncated_normal/uniform_bins; add bounded_uniform policy in sample_generation.py. */}
+                        <span className="card-port card-port-input" title="Input: basecase context" />
                       </div>
                       </div>
                     </div>
