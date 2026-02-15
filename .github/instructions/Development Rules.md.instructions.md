@@ -12,3 +12,5 @@ applyTo: '**'
 9. for those script would running for a long time, add a progress bar  to show the progress of the script and other concise information. 
 10. don't embedded python in conda command. `conda run -n alloy311 python -m alloy.experiments.tune_batch_size` will make the output message not shown in the terminal. Please use `conda run -n alloy311` then  `python -m alloy.experiments.tune_batch_size` instead to make the output message shown in the terminal.
 11. 随着复杂度提升，主动提出加强 git 版本管理如 branch 的创建，全局的 Codegen，自动化的测试等，来保证项目的可维护性和可扩展性。
+12. 待办会以 TODO 放在注释中，修改时留意并回报当前是否需要处理这些待办事项。
+13. 前端(TypeScript/React)的复杂函数、导出类型与公共组件Props必须有TSDoc注释；单文件超过300行时优先拆分为hooks/components/constants并在PR中说明拆分边界。
