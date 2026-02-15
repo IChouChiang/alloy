@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
@@ -11,6 +11,11 @@ type ThemeMode = 'light' | 'dark'
 type ChatMessage = {
   role: 'user' | 'assistant'
   text: string
+}
+
+type Point = {
+  x: number
+  y: number
 }
 
 function MockChatPanel() {
@@ -121,6 +126,62 @@ function TerminalPanel({ themeMode }: { themeMode: ThemeMode }) {
 function App() {
   const [activeTab, setActiveTab] = useState<TabKey>('tab1')
   const [themeMode, setThemeMode] = useState<ThemeMode>('light')
+  const canvasRef = useRef<HTMLDivElement | null>(null)
+  const baselineRef = useRef<HTMLDivElement | null>(null)
+  const dragState = useRef<{ isDragging: boolean; offsetX: number; offsetY: number }>({
+    isDragging: false,
+    offsetX: 0,
+    offsetY: 0,
+  })
+  const [cardPos, setCardPos] = useState<Point>({ x: 24, y: 24 })
+  const [isDragging, setIsDragging] = useState(false)
+
+  const handlePointerMove = useCallback((event: PointerEvent) => {
+    if (!dragState.current.isDragging || !canvasRef.current) {
+      return
+    }
+    const containerRect = canvasRef.current.getBoundingClientRect()
+    const targetRect = baselineRef.current?.getBoundingClientRect()
+    const proposedX = event.clientX - containerRect.left - dragState.current.offsetX
+    const proposedY = event.clientY - containerRect.top - dragState.current.offsetY
+    const maxX = targetRect ? containerRect.width - targetRect.width : containerRect.width
+    const maxY = targetRect ? containerRect.height - targetRect.height : containerRect.height
+    setCardPos({
+      x: Math.min(Math.max(0, proposedX), Math.max(0, maxX)),
+      y: Math.min(Math.max(0, proposedY), Math.max(0, maxY)),
+    })
+  }, [])
+
+  const handlePointerUp = useCallback(() => {
+    if (!dragState.current.isDragging) {
+      return
+    }
+    dragState.current.isDragging = false
+    setIsDragging(false)
+    window.removeEventListener('pointermove', handlePointerMove)
+    window.removeEventListener('pointerup', handlePointerUp)
+  }, [handlePointerMove])
+
+  useEffect(() => {
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+    }
+  }, [handlePointerMove, handlePointerUp])
+
+  const handleDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!canvasRef.current || !baselineRef.current) {
+      return
+    }
+    event.preventDefault()
+    const cardRect = baselineRef.current.getBoundingClientRect()
+    dragState.current.isDragging = true
+    setIsDragging(true)
+    dragState.current.offsetX = event.clientX - cardRect.left
+    dragState.current.offsetY = event.clientY - cardRect.top
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+  }
 
   return (
     <div className={`app-root theme-${themeMode}`}>
@@ -154,9 +215,25 @@ function App() {
                 <Panel defaultSize={72} minSize={35}>
                   <div className="panel-shell canvas-shell">
                     <div className="panel-title">Center Canvas (UI Shell)</div>
-                    <div className="canvas-placeholder">
+                    <div className="canvas-placeholder" ref={canvasRef}>
                       <div className="canvas-box">
                         Pipeline canvas placeholder
+                      </div>
+                      <div
+                        className={`baseline-card${isDragging ? ' dragging' : ''}`}
+                        ref={baselineRef}
+                        style={{ left: `${cardPos.x}px`, top: `${cardPos.y}px` }}
+                        onPointerDown={handleDragStart}
+                      >
+                        <div className="baseline-header">
+                          <span className="baseline-title">Baseline</span>
+                          <span className="baseline-badge">Locked</span>
+                        </div>
+                        <div className="baseline-row">
+                          <span className="baseline-label">Base case</span>
+                          <span className="baseline-value">IEEE 39-bus</span>
+                        </div>
+                        <p className="baseline-note">Case39 is the only configured option right now.</p>
                       </div>
                       <p>Next iteration: add sample-generation parameter nodes.</p>
                     </div>

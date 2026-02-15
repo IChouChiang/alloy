@@ -166,6 +166,8 @@
   justify-content: center;
   gap: 12px;
   color: var(--canvas-text);
+  position: relative;
+  overflow: hidden;
 }
 
 .canvas-box {
@@ -173,6 +175,68 @@
   border-radius: 8px;
   padding: 14px 16px;
   background: var(--canvas-box-bg);
+}
+
+.baseline-card {
+  width: 260px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--panel-bg);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: absolute;
+  box-shadow: 0 6px 18px rgba(15, 23, 40, 0.08);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.baseline-card.dragging {
+  cursor: grabbing;
+  box-shadow: 0 10px 24px rgba(15, 23, 40, 0.14);
+}
+
+.baseline-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.baseline-title {
+  font-weight: 600;
+  color: var(--panel-title-text);
+}
+
+.baseline-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--tab-active-bg);
+  border: 1px solid var(--tab-active-border);
+  color: var(--tab-active-text);
+}
+
+.baseline-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--app-text);
+}
+
+.baseline-label {
+  color: var(--chat-role-text);
+}
+
+.baseline-value {
+  font-weight: 600;
+}
+
+.baseline-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--chat-role-text);
 }
 
 .chat-history {
