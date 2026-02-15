@@ -193,6 +193,7 @@ $$
 - 2026-02-15: Started App modularization phase 1 by extracting workbench constants, header UI, and center canvas panel component from `ui/src/App.tsx` while preserving existing behavior.
 - 2026-02-15: Continued App modularization phase 2 by extracting reusable card drag behavior into `ui/src/components/workbench/hooks/useCardDrag.ts` and removing duplicated drag lifecycle code from `ui/src/App.tsx`.
 - 2026-02-15: Renamed Tab2 implementation from placeholder naming to production naming by switching `Tab2Placeholder.tsx`/`Tab2Placeholder` to `Tab2TopologyEditor.tsx`/`Tab2TopologyEditor` and updating all imports.
+- 2026-02-15: Started Tab2 modularization phase by splitting editor responsibilities into `useTopologyGraphData` (graph/spec state + validation), `useTopologyCanvasInteraction` (zoom/pan/drag/layout), and `TopologySpecListPanel` (right-side topology management UI), reducing `Tab2TopologyEditor.tsx` to orchestration.
 
 ### Multi-Layer Configuration
 ```
