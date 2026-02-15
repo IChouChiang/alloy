@@ -12,3 +12,4 @@ applyTo: '**'
 8. 当项目变得过于复杂和庞大时，给出利于长期开发和维护的建议，适时提醒用户转移到 Codex， Claude Code 或 Gemini CLI 等更适合处理复杂项目的环境中继续开发。
 9. for those script would running for a long time, add a progress bar  to show the progress of the script and other concise information. 
 10. don't embedded python in conda command. `conda run -n alloy311 python -m alloy.experiments.tune_batch_size` will make the output message not shown in the terminal. Please use `conda run -n alloy311` then  `python -m alloy.experiments.tune_batch_size` instead to make the output message shown in the terminal.
+11. 随着复杂度提升，主动提出加强 git 版本管理如 branch 的创建，全局的 Codegen，自动化的测试等，来保证项目的可维护性和可扩展性。
