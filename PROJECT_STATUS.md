@@ -181,6 +181,7 @@ $$
 - 2026-02-15: Updated card drag behavior to allow dragging from non-text blank areas while preserving text selection, and moved/clarified bounds-strategy guidance in Load Config.
 - 2026-02-15: Fixed Load Config grid alignment so section dividers/titles stay full-width and labels/controls keep stable left-right columns.
 - 2026-02-15: Started UI decoupling by extracting workbench panels/cards/toolbar into reusable components and keeping `App.tsx` as orchestration layer.
+- 2026-02-15: Added minimal card registry/schema (`CardDefinition`, `PortSpec`) and wired `App.tsx` to consume card metadata as groundwork for plugin-style card expansion.
 
 ### Multi-Layer Configuration
 ```

@@ -5,6 +5,7 @@ import './App.css'
 
 import { CanvasToolbar } from './components/workbench/CanvasToolbar'
 import { CaseSelectCard } from './components/workbench/CaseSelectCard'
+import { WORKBENCH_CARD_DEFINITIONS } from './components/workbench/cardDefinitions'
 import { LoadConfigCard } from './components/workbench/LoadConfigCard'
 import { MockChatPanel } from './components/workbench/MockChatPanel'
 import { Tab2Placeholder } from './components/workbench/Tab2Placeholder'
@@ -44,8 +45,8 @@ function App() {
   const MIN_ZOOM = 0.5
   const MAX_ZOOM = 1.8
   const ZOOM_STEP = 0.1
-  const BASELINE_CARD_WIDTH = 260
-  const LOAD_CARD_WIDTH = 330
+  const caseCardDef = WORKBENCH_CARD_DEFINITIONS.case_select
+  const loadCardDef = WORKBENCH_CARD_DEFINITIONS.load_config
 
   const [activeTab, setActiveTab] = useState<TabKey>('tab1')
   const [themeMode, setThemeMode] = useState<ThemeMode>('light')
@@ -91,7 +92,7 @@ function App() {
   const baselineHeight = baselineRef.current?.offsetHeight ?? 156
   const loadHeight = loadConfigRef.current?.offsetHeight ?? 292
   const baselineOutputPort = {
-    x: cardPos.x + BASELINE_CARD_WIDTH,
+    x: cardPos.x + caseCardDef.width,
     y: cardPos.y + baselineHeight / 2,
   }
   const loadInputPort = {
@@ -273,7 +274,7 @@ function App() {
     const loadHeight = loadConfigRef.current?.offsetHeight ?? 300
 
     const minX = Math.min(cardPos.x, loadCardPos.x)
-    const maxX = Math.max(cardPos.x + BASELINE_CARD_WIDTH, loadCardPos.x + LOAD_CARD_WIDTH)
+    const maxX = Math.max(cardPos.x + caseCardDef.width, loadCardPos.x + loadCardDef.width)
     const minY = Math.min(cardPos.y, loadCardPos.y)
     const maxY = Math.max(cardPos.y + baselineHeight, loadCardPos.y + loadHeight)
 
