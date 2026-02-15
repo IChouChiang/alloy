@@ -1,7 +1,6 @@
 ---
 applyTo: '**'
 ---
-0. Using we or 我们 instead distinguish the user and the assistant is recommended to create a more collaborative and engaging atmosphere in the development process.
 1. for small python scripts, always append a step to "compile" the script to check for syntax errors without running it. Use the command: `python -m py_compile <filename.py>`.
 2. avoid too many decorative separators like `print("="*60)` or `print("\n")` for spacing unless explicitly requested for readability.
 3. Use Google Style docstrings for all complex functions. Include `Args:`, `Returns:`, and `Raises:` etc.
