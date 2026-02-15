@@ -182,6 +182,8 @@ $$
 - 2026-02-15: Fixed Load Config grid alignment so section dividers/titles stay full-width and labels/controls keep stable left-right columns.
 - 2026-02-15: Started UI decoupling by extracting workbench panels/cards/toolbar into reusable components and keeping `App.tsx` as orchestration layer.
 - 2026-02-15: Added minimal card registry/schema (`CardDefinition`, `PortSpec`) and wired `App.tsx` to consume card metadata as groundwork for plugin-style card expansion.
+- 2026-02-15: Added VS Code-hover-friendly TSDoc baseline for workbench schema and core cards (`types.ts`, `cardDefinitions.ts`, `CaseSelectCard.tsx`, `LoadConfigCard.tsx`) to standardize frontend in-editor documentation.
+- 2026-02-15: Expanded frontend function-level documentation coverage by annotating workbench handlers and replacing major inline callbacks with named documented handlers (`App.tsx`, `MockChatPanel.tsx`, `TerminalPanel.tsx`, `CaseSelectCard.tsx`, `LoadConfigCard.tsx`).
 
 ### Multi-Layer Configuration
 ```

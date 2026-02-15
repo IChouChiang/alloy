@@ -1,5 +1,12 @@
 import type { CardDefinition } from './types'
 
+/**
+ * Registry of built-in workbench cards.
+ *
+ * Notes:
+ * - Keep IDs stable to avoid breaking saved layouts.
+ * - Ports define the wiring contract for validation and edge rendering.
+ */
 export const WORKBENCH_CARD_DEFINITIONS: Record<CardDefinition['id'], CardDefinition> = {
   case_select: {
     id: 'case_select',

@@ -4,8 +4,8 @@ import 'xterm/css/xterm.css'
 import './App.css'
 
 import { CanvasToolbar } from './components/workbench/CanvasToolbar'
-import { CaseSelectCard } from './components/workbench/CaseSelectCard'
 import { WORKBENCH_CARD_DEFINITIONS } from './components/workbench/cardDefinitions'
+import { CaseSelectCard } from './components/workbench/CaseSelectCard'
 import { LoadConfigCard } from './components/workbench/LoadConfigCard'
 import { MockChatPanel } from './components/workbench/MockChatPanel'
 import { Tab2Placeholder } from './components/workbench/Tab2Placeholder'
@@ -41,6 +41,12 @@ const PANDAPOWER_BASECASES = [
   'case9241pegase',
 ] as const
 
+/**
+ * Root workbench application shell.
+ *
+ * Orchestrates tab switching, theme mode, canvas pan/zoom, card dragging,
+ * and card-level configuration state.
+ */
 function App() {
   const MIN_ZOOM = 0.5
   const MAX_ZOOM = 1.8
@@ -100,10 +106,12 @@ function App() {
     y: loadCardPos.y + loadHeight / 2,
   }
 
+  /** Clamps a zoom value to the configured min/max range. */
   const clampZoom = useCallback((value: number) => {
     return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value))
   }, [MAX_ZOOM, MIN_ZOOM])
 
+  /** Moves the baseline card while dragging, converting screen to canvas coordinates. */
   const handlePointerMove = useCallback((event: PointerEvent) => {
     if (!dragState.current.isDragging || !canvasRef.current) {
       return
@@ -119,6 +127,7 @@ function App() {
     })
   }, [canvasOffset.x, canvasOffset.y, canvasZoom])
 
+  /** Finalizes baseline card drag and removes temporary global listeners. */
   const handlePointerUp = useCallback(() => {
     if (!dragState.current.isDragging) {
       return
@@ -129,6 +138,7 @@ function App() {
     window.removeEventListener('pointerup', handlePointerUp)
   }, [handlePointerMove])
 
+  /** Moves the load-config card while dragging, converting screen to canvas coordinates. */
   const handleLoadCardPointerMove = useCallback((event: PointerEvent) => {
     if (!loadCardDragState.current.isDragging || !canvasRef.current) {
       return
@@ -144,6 +154,7 @@ function App() {
     })
   }, [canvasOffset.x, canvasOffset.y, canvasZoom])
 
+  /** Updates canvas offset during blank-area panning with pointer capture. */
   const handleCanvasPanPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!canvasPanState.current.isPanning || canvasPanState.current.pointerId !== event.pointerId) {
       return
@@ -156,6 +167,7 @@ function App() {
     })
   }
 
+  /** Ends panning and releases pointer capture for the active canvas pointer. */
   const handleCanvasPanPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!canvasPanState.current.isPanning || canvasPanState.current.pointerId !== event.pointerId) {
       return
@@ -168,6 +180,7 @@ function App() {
     setIsCanvasPanning(false)
   }
 
+  /** Finalizes load-config card drag and removes temporary global listeners. */
   const handleLoadCardPointerUp = useCallback(() => {
     if (!loadCardDragState.current.isDragging) {
       return
@@ -178,6 +191,7 @@ function App() {
     window.removeEventListener('pointerup', handleLoadCardPointerUp)
   }, [handleLoadCardPointerMove])
 
+  /** Cleans up transient pointer listeners on unmount or callback change. */
   useEffect(() => {
     return () => {
       window.removeEventListener('pointermove', handlePointerMove)
@@ -192,6 +206,7 @@ function App() {
     handleLoadCardPointerUp,
   ])
 
+  /** Starts baseline card dragging and stores pointer-to-card offset. */
   const handleDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!canvasRef.current || !baselineRef.current) {
       return
@@ -206,6 +221,7 @@ function App() {
     window.addEventListener('pointerup', handlePointerUp)
   }
 
+  /** Returns whether a pointer-down target should initiate card dragging. */
   const shouldStartCardDrag = (event: React.PointerEvent<HTMLElement>) => {
     const target = event.target as HTMLElement | null
     if (!target) {
@@ -221,6 +237,7 @@ function App() {
     return true
   }
 
+  /** Starts baseline card drag when pointer-down happens on blank card area. */
   const handleBaselineCardPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!shouldStartCardDrag(event)) {
       return
@@ -228,6 +245,7 @@ function App() {
     handleDragStart(event)
   }
 
+  /** Starts load-config card dragging and stores pointer-to-card offset. */
   const handleLoadCardDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!canvasRef.current || !loadConfigRef.current) {
       return
@@ -242,6 +260,7 @@ function App() {
     window.addEventListener('pointerup', handleLoadCardPointerUp)
   }
 
+  /** Starts load-config drag when pointer-down happens on blank card area. */
   const handleLoadCardPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!shouldStartCardDrag(event)) {
       return
@@ -249,20 +268,26 @@ function App() {
     handleLoadCardDragStart(event)
   }
 
+  /** Applies wheel-based zooming around the current viewport. */
   const handleCanvasWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     event.preventDefault()
     const direction = event.deltaY < 0 ? 1 : -1
     setCanvasZoom((prev) => clampZoom(prev + direction * ZOOM_STEP))
   }
 
+  /** Increases canvas zoom by one step. */
   const zoomIn = () => {
     setCanvasZoom((prev) => clampZoom(prev + ZOOM_STEP))
   }
 
+  /** Decreases canvas zoom by one step. */
   const zoomOut = () => {
     setCanvasZoom((prev) => clampZoom(prev - ZOOM_STEP))
   }
 
+  /**
+   * Resets zoom to 100% and recenters viewport around current card content bounds.
+   */
   const centerAt100 = () => {
     if (!canvasRef.current) {
       return
@@ -288,6 +313,7 @@ function App() {
     })
   }
 
+  /** Starts blank-area canvas panning and captures the active pointer. */
   const handleCanvasPanStart = (event: React.PointerEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement | null
     if (
@@ -308,25 +334,50 @@ function App() {
     setIsCanvasPanning(true)
   }
 
+  /** Switches active tab to the Workbench view. */
+  const showWorkbenchTab = () => {
+    setActiveTab('tab1')
+  }
+
+  /** Switches active tab to the Topology placeholder view. */
+  const showTopologyTab = () => {
+    setActiveTab('tab2')
+  }
+
+  /** Toggles application theme between light and dark modes. */
+  const toggleThemeMode = () => {
+    setThemeMode((prev) => (prev === 'light' ? 'dark' : 'light'))
+  }
+
+  /** Toggles lock state for the baseline/card basecase configuration. */
+  const toggleBasecaseLock = () => {
+    setIsBasecaseLocked((prev) => !prev)
+  }
+
+  /** Toggles lock state for load-configuration inputs. */
+  const toggleLoadConfigLock = () => {
+    setIsLoadConfigLocked((prev) => !prev)
+  }
+
   return (
     <div className={`app-root theme-${themeMode}`}>
       <header className="tabs-header">
         <button
           className={activeTab === 'tab1' ? 'tab-btn active' : 'tab-btn'}
-          onClick={() => setActiveTab('tab1')}
+          onClick={showWorkbenchTab}
         >
           Tab1 - Workbench
         </button>
         <button
           className={activeTab === 'tab2' ? 'tab-btn active' : 'tab-btn'}
-          onClick={() => setActiveTab('tab2')}
+          onClick={showTopologyTab}
         >
           Tab2 - Topology (Placeholder)
         </button>
         <div className="header-spacer" />
         <button
           className="theme-btn"
-          onClick={() => setThemeMode((prev) => (prev === 'light' ? 'dark' : 'light'))}
+          onClick={toggleThemeMode}
         >
           Theme: {themeMode === 'light' ? 'Light' : 'Dark'}
         </button>
@@ -377,7 +428,7 @@ function App() {
                           basecases={PANDAPOWER_BASECASES}
                           onCardPointerDown={handleBaselineCardPointerDown}
                           onHeaderPointerDown={handleDragStart}
-                          onToggleLock={() => setIsBasecaseLocked((prev) => !prev)}
+                          onToggleLock={toggleBasecaseLock}
                           onChangeBasecase={setSelectedBasecase}
                         />
                         <LoadConfigCard
@@ -394,7 +445,7 @@ function App() {
                           nodeNoiseSigma={nodeNoiseSigma}
                           onCardPointerDown={handleLoadCardPointerDown}
                           onHeaderPointerDown={handleLoadCardDragStart}
-                          onToggleLock={() => setIsLoadConfigLocked((prev) => !prev)}
+                          onToggleLock={toggleLoadConfigLock}
                           onModeChange={setScaleSamplingMode}
                           onGlobalScaleMuChange={setGlobalScaleMu}
                           onGlobalScaleSigmaChange={setGlobalScaleSigma}

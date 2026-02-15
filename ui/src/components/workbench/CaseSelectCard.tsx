@@ -1,21 +1,38 @@
-import type { PointerEvent, RefObject, SyntheticEvent } from 'react'
+import type { ChangeEvent, PointerEvent, RefObject, SyntheticEvent } from 'react'
 
 import { LockIcon } from './LockIcon'
 import type { Point } from './types'
 
+/** Props for the Case Select card. */
 type CaseSelectCardProps = {
+  /** Card position in canvas/world coordinates. */
   position: Point
+  /** Whether the card is currently being dragged. */
   isDragging: boolean
+  /** Ref to card root for size/position measurement. */
   cardRef: RefObject<HTMLDivElement | null>
+  /** Active basecase identifier. */
   selectedBasecase: string
+  /** Whether card controls are locked for editing. */
   isLocked: boolean
+  /** Available basecase options. */
   basecases: readonly string[]
+  /** Pointer-down handler for card body drag logic. */
   onCardPointerDown: (event: PointerEvent<HTMLDivElement>) => void
+  /** Pointer-down handler for header drag handle. */
   onHeaderPointerDown: (event: PointerEvent<HTMLDivElement>) => void
+  /** Toggle lock/unlock state. */
   onToggleLock: () => void
+  /** Update selected basecase value. */
   onChangeBasecase: (value: string) => void
 }
 
+/**
+ * Case selection card.
+ *
+ * Provides locked/unlocked basecase selection and emits base-context metadata
+ * to downstream cards through its output port.
+ */
 export function CaseSelectCard({
   position,
   isDragging,
@@ -28,8 +45,23 @@ export function CaseSelectCard({
   onToggleLock,
   onChangeBasecase,
 }: CaseSelectCardProps) {
+  /** Prevents child controls from bubbling pointer events to drag handlers. */
   const stopPropagation = (event: SyntheticEvent<HTMLElement>) => {
     event.stopPropagation()
+  }
+
+  /** Propagates selected basecase change to parent state. */
+  const handleBasecaseChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    onChangeBasecase(event.target.value)
+  }
+
+  /** Renders one selectable basecase option. */
+  const renderBasecaseOption = (basecase: string) => {
+    return (
+      <option key={basecase} value={basecase}>
+        {basecase}
+      </option>
+    )
   }
 
   return (
@@ -61,15 +93,11 @@ export function CaseSelectCard({
           className="baseline-select"
           value={selectedBasecase}
           disabled={isLocked}
-          onChange={(event) => onChangeBasecase(event.target.value)}
+          onChange={handleBasecaseChange}
           onPointerDown={stopPropagation}
           onMouseDown={stopPropagation}
         >
-          {basecases.map((basecase) => (
-            <option key={basecase} value={basecase}>
-              {basecase}
-            </option>
-          ))}
+          {basecases.map(renderBasecaseOption)}
         </select>
       </div>
       <p className="baseline-note">

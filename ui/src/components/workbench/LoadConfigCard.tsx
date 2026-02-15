@@ -1,32 +1,59 @@
-import type { PointerEvent, RefObject, SyntheticEvent } from 'react'
+import type { ChangeEvent, PointerEvent, RefObject, SyntheticEvent } from 'react'
 
 import { LockIcon } from './LockIcon'
 import type { Point, ScaleSamplingMode } from './types'
 
+/** Props for the Load Config card. */
 type LoadConfigCardProps = {
+  /** Card position in canvas/world coordinates. */
   position: Point
+  /** Whether the card is currently being dragged. */
   isDragging: boolean
+  /** Ref to card root for size/position measurement. */
   cardRef: RefObject<HTMLDivElement | null>
+  /** Whether card controls are locked for editing. */
   isLocked: boolean
+  /** Selected global-scale sampling strategy. */
   scaleSamplingMode: ScaleSamplingMode
+  /** Mean μ for truncated-normal strategy. */
   globalScaleMu: number
+  /** Std-dev σ for truncated-normal strategy. */
   globalScaleSigma: number
+  /** Lower bound g_min for global load scale. */
   globalScaleMin: number
+  /** Upper bound g_max for global load scale. */
   globalScaleMax: number
+  /** Bin count for uniform-bins strategy. */
   scaleUniformBins: number
+  /** Per-node Gaussian noise σ. */
   nodeNoiseSigma: number
+  /** Pointer-down handler for card body drag logic. */
   onCardPointerDown: (event: PointerEvent<HTMLDivElement>) => void
+  /** Pointer-down handler for header drag handle. */
   onHeaderPointerDown: (event: PointerEvent<HTMLDivElement>) => void
+  /** Toggle lock/unlock state. */
   onToggleLock: () => void
+  /** Update sampling mode. */
   onModeChange: (mode: ScaleSamplingMode) => void
+  /** Update μ. */
   onGlobalScaleMuChange: (value: number) => void
+  /** Update σ. */
   onGlobalScaleSigmaChange: (value: number) => void
+  /** Update g_min. */
   onGlobalScaleMinChange: (value: number) => void
+  /** Update g_max. */
   onGlobalScaleMaxChange: (value: number) => void
+  /** Update uniform bin count. */
   onScaleUniformBinsChange: (value: number) => void
+  /** Update node noise σ. */
   onNodeNoiseSigmaChange: (value: number) => void
 }
 
+/**
+ * Load configuration card.
+ *
+ * Encapsulates the two-stage load setup: bounds first, then sampling strategy.
+ */
 export function LoadConfigCard({
   position,
   isDragging,
@@ -50,8 +77,49 @@ export function LoadConfigCard({
   onScaleUniformBinsChange,
   onNodeNoiseSigmaChange,
 }: LoadConfigCardProps) {
+  /** Prevents child controls from bubbling pointer events to drag handlers. */
   const stopPropagation = (event: SyntheticEvent<HTMLElement>) => {
     event.stopPropagation()
+  }
+
+  /** Converts numeric input field text to number for parent state updates. */
+  const parseNumericValue = (event: ChangeEvent<HTMLInputElement>) => {
+    return Number(event.target.value)
+  }
+
+  /** Updates lower bound g_min. */
+  const handleGlobalScaleMinChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onGlobalScaleMinChange(parseNumericValue(event))
+  }
+
+  /** Updates upper bound g_max. */
+  const handleGlobalScaleMaxChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onGlobalScaleMaxChange(parseNumericValue(event))
+  }
+
+  /** Updates sampling strategy mode. */
+  const handleScaleModeChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    onModeChange(event.target.value as ScaleSamplingMode)
+  }
+
+  /** Updates truncated-normal mean μ. */
+  const handleGlobalScaleMuChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onGlobalScaleMuChange(parseNumericValue(event))
+  }
+
+  /** Updates truncated-normal std-dev σ. */
+  const handleGlobalScaleSigmaChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onGlobalScaleSigmaChange(parseNumericValue(event))
+  }
+
+  /** Updates uniform bin count. */
+  const handleScaleUniformBinsChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onScaleUniformBinsChange(parseNumericValue(event))
+  }
+
+  /** Updates node-level noise σ. */
+  const handleNodeNoiseSigmaChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onNodeNoiseSigmaChange(parseNumericValue(event))
   }
 
   return (
@@ -92,7 +160,7 @@ export function LoadConfigCard({
           step="0.01"
           value={globalScaleMin}
           disabled={isLocked}
-          onChange={(event) => onGlobalScaleMinChange(Number(event.target.value))}
+          onChange={handleGlobalScaleMinChange}
           onPointerDown={stopPropagation}
           onMouseDown={stopPropagation}
         />
@@ -105,7 +173,7 @@ export function LoadConfigCard({
           step="0.01"
           value={globalScaleMax}
           disabled={isLocked}
-          onChange={(event) => onGlobalScaleMaxChange(Number(event.target.value))}
+          onChange={handleGlobalScaleMaxChange}
           onPointerDown={stopPropagation}
           onMouseDown={stopPropagation}
         />
@@ -131,7 +199,7 @@ export function LoadConfigCard({
           className="baseline-select"
           value={scaleSamplingMode}
           disabled={isLocked}
-          onChange={(event) => onModeChange(event.target.value as ScaleSamplingMode)}
+          onChange={handleScaleModeChange}
           onPointerDown={stopPropagation}
           onMouseDown={stopPropagation}
         >
@@ -150,7 +218,7 @@ export function LoadConfigCard({
               step="0.01"
               value={globalScaleMu}
               disabled={isLocked}
-              onChange={(event) => onGlobalScaleMuChange(Number(event.target.value))}
+              onChange={handleGlobalScaleMuChange}
               onPointerDown={stopPropagation}
               onMouseDown={stopPropagation}
             />
@@ -164,7 +232,7 @@ export function LoadConfigCard({
               min="0"
               value={globalScaleSigma}
               disabled={isLocked}
-              onChange={(event) => onGlobalScaleSigmaChange(Number(event.target.value))}
+              onChange={handleGlobalScaleSigmaChange}
               onPointerDown={stopPropagation}
               onMouseDown={stopPropagation}
             />
@@ -182,7 +250,7 @@ export function LoadConfigCard({
               min="1"
               value={scaleUniformBins}
               disabled={isLocked}
-              onChange={(event) => onScaleUniformBinsChange(Number(event.target.value))}
+              onChange={handleScaleUniformBinsChange}
               onPointerDown={stopPropagation}
               onMouseDown={stopPropagation}
             />
@@ -198,7 +266,7 @@ export function LoadConfigCard({
           min="0"
           value={nodeNoiseSigma}
           disabled={isLocked}
-          onChange={(event) => onNodeNoiseSigmaChange(Number(event.target.value))}
+          onChange={handleNodeNoiseSigmaChange}
           onPointerDown={stopPropagation}
           onMouseDown={stopPropagation}
         />

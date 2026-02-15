@@ -1,3 +1,4 @@
+/** Placeholder panel shown for Topology tab before feature implementation. */
 export function Tab2Placeholder() {
   return (
     <main className="workbench-main">

@@ -1,7 +1,10 @@
+/** Props for lock icon rendering state. */
 type LockIconProps = {
+  /** True renders locked icon; false renders unlocked icon. */
   locked: boolean
 }
 
+/** Renders the lock/unlock glyph used by card lock toggle buttons. */
 export function LockIcon({ locked }: LockIconProps) {
   if (locked) {
     return (

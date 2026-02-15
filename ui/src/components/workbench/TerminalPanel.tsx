@@ -4,13 +4,21 @@ import { FitAddon } from 'xterm-addon-fit'
 
 import type { ThemeMode } from './types'
 
+/** Props for the terminal panel. */
 type TerminalPanelProps = {
+  /** Active UI theme, used to align terminal color palette. */
   themeMode: ThemeMode
 }
 
+/**
+ * XTerm-based terminal panel with a short-lived mock heartbeat stream.
+ *
+ * Re-initializes terminal instance when theme changes to keep colors consistent.
+ */
 export function TerminalPanel({ themeMode }: TerminalPanelProps) {
   const hostRef = useRef<HTMLDivElement | null>(null)
 
+  /** Creates terminal instance, binds resize fit, and disposes resources on cleanup. */
   useEffect(() => {
     if (!hostRef.current) {
       return
@@ -35,25 +43,35 @@ export function TerminalPanel({ themeMode }: TerminalPanelProps) {
     terminal.writeln('[alloy-ui] waiting for backend task logs...')
 
     let tick = 1
-    const timer = window.setInterval(() => {
+
+    /** Writes one heartbeat line and stops stream after the third tick. */
+    const writeHeartbeatLog = () => {
       terminal.writeln(`[mock-log] heartbeat ${tick} | tab1 shell running`)
       tick += 1
       if (tick > 3) {
         terminal.writeln('[mock-log] heartbeat completed (3/3), stopping stream.')
         window.clearInterval(timer)
       }
-    }, 1400)
+    }
 
-    const resizeObserver = new ResizeObserver(() => {
+    const timer = window.setInterval(writeHeartbeatLog, 1400)
+
+    /** Fits terminal columns/rows to the host container size. */
+    const handleHostResize = () => {
       fitAddon.fit()
-    })
+    }
+
+    const resizeObserver = new ResizeObserver(handleHostResize)
     resizeObserver.observe(hostRef.current)
 
-    return () => {
+    /** Releases interval, observer, and xterm resources on effect teardown. */
+    const cleanupTerminalResources = () => {
       window.clearInterval(timer)
       resizeObserver.disconnect()
       terminal.dispose()
     }
+
+    return cleanupTerminalResources
   }, [themeMode])
 
   return (

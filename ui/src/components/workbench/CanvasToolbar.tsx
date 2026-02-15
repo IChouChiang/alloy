@@ -1,10 +1,16 @@
+/** Props for canvas zoom/pan quick actions. */
 type CanvasToolbarProps = {
+  /** Current zoom value shown as percentage. */
   zoomPercent: number
+  /** Callback to decrease zoom level. */
   onZoomOut: () => void
+  /** Callback to increase zoom level. */
   onZoomIn: () => void
+  /** Callback to reset to 100% and center content. */
   onCenterAt100: () => void
 }
 
+/** Compact toolbar for zoom controls in the canvas viewport. */
 export function CanvasToolbar({
   zoomPercent,
   onZoomOut,
