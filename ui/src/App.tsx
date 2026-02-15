@@ -18,6 +18,35 @@ type Point = {
   y: number
 }
 
+const PANDAPOWER_BASECASES = [
+  'case4gs',
+  'case5',
+  'case6ww',
+  'case9',
+  'case11_iwamoto',
+  'case14',
+  'case24_ieee_rts',
+  'case30',
+  'case_ieee30',
+  'case33bw',
+  'case39',
+  'case57',
+  'case89pegase',
+  'case118',
+  'case145',
+  'case_illinois200',
+  'case300',
+  'case1354pegase',
+  'case1888rte',
+  'case2848rte',
+  'case2869pegase',
+  'case3120sp',
+  'case6470rte',
+  'case6495rte',
+  'case6515rte',
+  'case9241pegase',
+] as const
+
 function MockChatPanel() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'assistant', text: 'Mock assistant ready. This panel is reserved for LLM integration.' },
@@ -126,6 +155,7 @@ function TerminalPanel({ themeMode }: { themeMode: ThemeMode }) {
 function App() {
   const [activeTab, setActiveTab] = useState<TabKey>('tab1')
   const [themeMode, setThemeMode] = useState<ThemeMode>('light')
+  const [selectedBasecase, setSelectedBasecase] = useState<string>('case39')
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const baselineRef = useRef<HTMLDivElement | null>(null)
   const dragState = useRef<{ isDragging: boolean; offsetX: number; offsetY: number }>({
@@ -227,13 +257,26 @@ function App() {
                       >
                         <div className="baseline-header">
                           <span className="baseline-title">Baseline</span>
-                          <span className="baseline-badge">Locked</span>
+                          <span className="baseline-badge">Dev</span>
                         </div>
                         <div className="baseline-row">
-                          <span className="baseline-label">Base case</span>
-                          <span className="baseline-value">IEEE 39-bus</span>
+                          <label className="baseline-label" htmlFor="basecase-select">Base case</label>
+                          <select
+                            id="basecase-select"
+                            className="baseline-select"
+                            value={selectedBasecase}
+                            onChange={(event) => setSelectedBasecase(event.target.value)}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}
+                          >
+                            {PANDAPOWER_BASECASES.map((basecase) => (
+                              <option key={basecase} value={basecase}>
+                                {basecase}
+                              </option>
+                            ))}
+                          </select>
                         </div>
-                        <p className="baseline-note">Case39 is the only configured option right now.</p>
+                        <p className="baseline-note">UI allows all pandapower basecases; backend currently uses case39.</p>
                       </div>
                       <p>Next iteration: add sample-generation parameter nodes.</p>
                     </div>

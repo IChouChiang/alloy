@@ -221,6 +221,8 @@
 .baseline-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 10px;
   font-size: 13px;
   color: var(--app-text);
 }
@@ -231,6 +233,16 @@
 
 .baseline-value {
   font-weight: 600;
+}
+
+.baseline-select {
+  min-width: 180px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--input-text);
+  font-size: 12px;
 }
 
 .baseline-note {
