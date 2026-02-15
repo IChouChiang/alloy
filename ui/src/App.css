@@ -245,6 +245,15 @@
   font-size: 12px;
 }
 
+.baseline-select:disabled {
+  opacity: 0.5;
+  background: var(--tab-bg);
+  color: var(--chat-role-text);
+  border-color: var(--panel-border);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .baseline-note {
   margin: 0;
   font-size: 12px;

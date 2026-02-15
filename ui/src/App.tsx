@@ -47,6 +47,8 @@ const PANDAPOWER_BASECASES = [
   'case9241pegase',
 ] as const
 
+const LOCKED_BASECASE = 'case39'
+
 function MockChatPanel() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'assistant', text: 'Mock assistant ready. This panel is reserved for LLM integration.' },
@@ -155,7 +157,6 @@ function TerminalPanel({ themeMode }: { themeMode: ThemeMode }) {
 function App() {
   const [activeTab, setActiveTab] = useState<TabKey>('tab1')
   const [themeMode, setThemeMode] = useState<ThemeMode>('light')
-  const [selectedBasecase, setSelectedBasecase] = useState<string>('case39')
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const baselineRef = useRef<HTMLDivElement | null>(null)
   const dragState = useRef<{ isDragging: boolean; offsetX: number; offsetY: number }>({
@@ -257,15 +258,15 @@ function App() {
                       >
                         <div className="baseline-header">
                           <span className="baseline-title">Baseline</span>
-                          <span className="baseline-badge">Dev</span>
+                          <span className="baseline-badge">Locked</span>
                         </div>
                         <div className="baseline-row">
                           <label className="baseline-label" htmlFor="basecase-select">Base case</label>
                           <select
                             id="basecase-select"
                             className="baseline-select"
-                            value={selectedBasecase}
-                            onChange={(event) => setSelectedBasecase(event.target.value)}
+                            value={LOCKED_BASECASE}
+                            disabled
                             onPointerDown={(event) => event.stopPropagation()}
                             onMouseDown={(event) => event.stopPropagation()}
                           >
@@ -276,7 +277,7 @@ function App() {
                             ))}
                           </select>
                         </div>
-                        <p className="baseline-note">UI allows all pandapower basecases; backend currently uses case39.</p>
+                        <p className="baseline-note">Dropdown is intentionally locked to case39 for current development stage.</p>
                       </div>
                       <p>Next iteration: add sample-generation parameter nodes.</p>
                     </div>
