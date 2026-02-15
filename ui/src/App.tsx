@@ -18,6 +18,8 @@ type Point = {
   y: number
 }
 
+type ScaleSamplingMode = 'truncated_normal' | 'uniform_bins'
+
 const PANDAPOWER_BASECASES = [
   'case4gs',
   'case5',
@@ -169,35 +171,71 @@ function TerminalPanel({ themeMode }: { themeMode: ThemeMode }) {
 }
 
 function App() {
+  const MIN_ZOOM = 0.5
+  const MAX_ZOOM = 1.8
+  const ZOOM_STEP = 0.1
+  const BASELINE_CARD_WIDTH = 260
+  const LOAD_CARD_WIDTH = 330
+
   const [activeTab, setActiveTab] = useState<TabKey>('tab1')
   const [themeMode, setThemeMode] = useState<ThemeMode>('light')
+  const [canvasZoom, setCanvasZoom] = useState(1)
+  const [canvasOffset, setCanvasOffset] = useState<Point>({ x: 0, y: 0 })
   const [selectedBasecase, setSelectedBasecase] = useState<string>('case39')
   const [isBasecaseLocked, setIsBasecaseLocked] = useState(true)
+  const [isLoadConfigLocked, setIsLoadConfigLocked] = useState(true)
+  const [scaleSamplingMode, setScaleSamplingMode] = useState<ScaleSamplingMode>('truncated_normal')
+  const [globalScaleMu, setGlobalScaleMu] = useState(1.0)
+  const [globalScaleSigma, setGlobalScaleSigma] = useState(0.2)
+  const [globalScaleMin, setGlobalScaleMin] = useState(0.5)
+  const [globalScaleMax, setGlobalScaleMax] = useState(1.5)
+  const [scaleUniformBins, setScaleUniformBins] = useState(20)
+  const [nodeNoiseSigma, setNodeNoiseSigma] = useState(0.05)
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const baselineRef = useRef<HTMLDivElement | null>(null)
+  const loadConfigRef = useRef<HTMLDivElement | null>(null)
   const dragState = useRef<{ isDragging: boolean; offsetX: number; offsetY: number }>({
     isDragging: false,
     offsetX: 0,
     offsetY: 0,
   })
+  const loadCardDragState = useRef<{ isDragging: boolean; offsetX: number; offsetY: number }>({
+    isDragging: false,
+    offsetX: 0,
+    offsetY: 0,
+  })
   const [cardPos, setCardPos] = useState<Point>({ x: 24, y: 24 })
+  const [loadCardPos, setLoadCardPos] = useState<Point>({ x: 320, y: 24 })
   const [isDragging, setIsDragging] = useState(false)
+  const [isLoadCardDragging, setIsLoadCardDragging] = useState(false)
+  const [isCanvasPanning, setIsCanvasPanning] = useState(false)
+  const canvasPanState = useRef<{ isPanning: boolean; pointerId: number | null; startX: number; startY: number; startOffsetX: number; startOffsetY: number }>({
+    isPanning: false,
+    pointerId: null,
+    startX: 0,
+    startY: 0,
+    startOffsetX: 0,
+    startOffsetY: 0,
+  })
+
+  const clampZoom = useCallback((value: number) => {
+    return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value))
+  }, [MAX_ZOOM, MIN_ZOOM])
 
   const handlePointerMove = useCallback((event: PointerEvent) => {
     if (!dragState.current.isDragging || !canvasRef.current) {
       return
     }
     const containerRect = canvasRef.current.getBoundingClientRect()
-    const targetRect = baselineRef.current?.getBoundingClientRect()
-    const proposedX = event.clientX - containerRect.left - dragState.current.offsetX
-    const proposedY = event.clientY - containerRect.top - dragState.current.offsetY
-    const maxX = targetRect ? containerRect.width - targetRect.width : containerRect.width
-    const maxY = targetRect ? containerRect.height - targetRect.height : containerRect.height
+    const proposedX =
+      (event.clientX - containerRect.left - canvasOffset.x) / canvasZoom - dragState.current.offsetX
+    const proposedY =
+      (event.clientY - containerRect.top - canvasOffset.y) / canvasZoom - dragState.current.offsetY
     setCardPos({
-      x: Math.min(Math.max(0, proposedX), Math.max(0, maxX)),
-      y: Math.min(Math.max(0, proposedY), Math.max(0, maxY)),
+      x: proposedX,
+      y: proposedY,
     })
-  }, [])
+  }, [canvasOffset.x, canvasOffset.y, canvasZoom])
 
   const handlePointerUp = useCallback(() => {
     if (!dragState.current.isDragging) {
@@ -209,12 +247,68 @@ function App() {
     window.removeEventListener('pointerup', handlePointerUp)
   }, [handlePointerMove])
 
+  const handleLoadCardPointerMove = useCallback((event: PointerEvent) => {
+    if (!loadCardDragState.current.isDragging || !canvasRef.current) {
+      return
+    }
+    const containerRect = canvasRef.current.getBoundingClientRect()
+    const proposedX =
+      (event.clientX - containerRect.left - canvasOffset.x) / canvasZoom - loadCardDragState.current.offsetX
+    const proposedY =
+      (event.clientY - containerRect.top - canvasOffset.y) / canvasZoom - loadCardDragState.current.offsetY
+    setLoadCardPos({
+      x: proposedX,
+      y: proposedY,
+    })
+  }, [canvasOffset.x, canvasOffset.y, canvasZoom])
+
+  const handleCanvasPanPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!canvasPanState.current.isPanning || canvasPanState.current.pointerId !== event.pointerId) {
+      return
+    }
+    const deltaX = event.clientX - canvasPanState.current.startX
+    const deltaY = event.clientY - canvasPanState.current.startY
+    setCanvasOffset({
+      x: canvasPanState.current.startOffsetX + deltaX,
+      y: canvasPanState.current.startOffsetY + deltaY,
+    })
+  }
+
+  const handleCanvasPanPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!canvasPanState.current.isPanning || canvasPanState.current.pointerId !== event.pointerId) {
+      return
+    }
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+    canvasPanState.current.isPanning = false
+    canvasPanState.current.pointerId = null
+    setIsCanvasPanning(false)
+  }
+
+  const handleLoadCardPointerUp = useCallback(() => {
+    if (!loadCardDragState.current.isDragging) {
+      return
+    }
+    loadCardDragState.current.isDragging = false
+    setIsLoadCardDragging(false)
+    window.removeEventListener('pointermove', handleLoadCardPointerMove)
+    window.removeEventListener('pointerup', handleLoadCardPointerUp)
+  }, [handleLoadCardPointerMove])
+
   useEffect(() => {
     return () => {
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('pointerup', handlePointerUp)
+      window.removeEventListener('pointermove', handleLoadCardPointerMove)
+      window.removeEventListener('pointerup', handleLoadCardPointerUp)
     }
-  }, [handlePointerMove, handlePointerUp])
+  }, [
+    handlePointerMove,
+    handlePointerUp,
+    handleLoadCardPointerMove,
+    handleLoadCardPointerUp,
+  ])
 
   const handleDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!canvasRef.current || !baselineRef.current) {
@@ -224,10 +318,83 @@ function App() {
     const cardRect = baselineRef.current.getBoundingClientRect()
     dragState.current.isDragging = true
     setIsDragging(true)
-    dragState.current.offsetX = event.clientX - cardRect.left
-    dragState.current.offsetY = event.clientY - cardRect.top
+    dragState.current.offsetX = (event.clientX - cardRect.left) / canvasZoom
+    dragState.current.offsetY = (event.clientY - cardRect.top) / canvasZoom
     window.addEventListener('pointermove', handlePointerMove)
     window.addEventListener('pointerup', handlePointerUp)
+  }
+
+  const handleLoadCardDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!canvasRef.current || !loadConfigRef.current) {
+      return
+    }
+    event.preventDefault()
+    const cardRect = loadConfigRef.current.getBoundingClientRect()
+    loadCardDragState.current.isDragging = true
+    setIsLoadCardDragging(true)
+    loadCardDragState.current.offsetX = (event.clientX - cardRect.left) / canvasZoom
+    loadCardDragState.current.offsetY = (event.clientY - cardRect.top) / canvasZoom
+    window.addEventListener('pointermove', handleLoadCardPointerMove)
+    window.addEventListener('pointerup', handleLoadCardPointerUp)
+  }
+
+  const handleCanvasWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    const direction = event.deltaY < 0 ? 1 : -1
+    setCanvasZoom((prev) => clampZoom(prev + direction * ZOOM_STEP))
+  }
+
+  const zoomIn = () => {
+    setCanvasZoom((prev) => clampZoom(prev + ZOOM_STEP))
+  }
+
+  const zoomOut = () => {
+    setCanvasZoom((prev) => clampZoom(prev - ZOOM_STEP))
+  }
+
+  const centerAt100 = () => {
+    if (!canvasRef.current) {
+      return
+    }
+    const viewportWidth = canvasRef.current.clientWidth
+    const viewportHeight = canvasRef.current.clientHeight
+
+    const baselineHeight = baselineRef.current?.offsetHeight ?? 180
+    const loadHeight = loadConfigRef.current?.offsetHeight ?? 300
+
+    const minX = Math.min(cardPos.x, loadCardPos.x)
+    const maxX = Math.max(cardPos.x + BASELINE_CARD_WIDTH, loadCardPos.x + LOAD_CARD_WIDTH)
+    const minY = Math.min(cardPos.y, loadCardPos.y)
+    const maxY = Math.max(cardPos.y + baselineHeight, loadCardPos.y + loadHeight)
+
+    const contentCenterX = (minX + maxX) / 2
+    const contentCenterY = (minY + maxY) / 2
+
+    setCanvasZoom(1)
+    setCanvasOffset({
+      x: viewportWidth / 2 - contentCenterX,
+      y: viewportHeight / 2 - contentCenterY,
+    })
+  }
+
+  const handleCanvasPanStart = (event: React.PointerEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null
+    if (
+      target?.closest(
+        '.baseline-card, .load-config-card, .canvas-toolbar, .zoom-btn, .baseline-select, .load-input, .baseline-lock-btn, button, input, select, textarea, label'
+      )
+    ) {
+      return
+    }
+    event.preventDefault()
+    canvasPanState.current.isPanning = true
+    canvasPanState.current.pointerId = event.pointerId
+    canvasPanState.current.startX = event.clientX
+    canvasPanState.current.startY = event.clientY
+    canvasPanState.current.startOffsetX = canvasOffset.x
+    canvasPanState.current.startOffsetY = canvasOffset.y
+    event.currentTarget.setPointerCapture(event.pointerId)
+    setIsCanvasPanning(true)
   }
 
   return (
@@ -262,10 +429,25 @@ function App() {
                 <Panel defaultSize={72} minSize={35}>
                   <div className="panel-shell canvas-shell">
                     <div className="panel-title">Center Canvas (UI Shell)</div>
-                    <div className="canvas-placeholder" ref={canvasRef}>
-                      <div className="canvas-box">
-                        Pipeline canvas placeholder
+                    <div
+                      className={`canvas-placeholder${isCanvasPanning ? ' panning' : ''}`}
+                      ref={canvasRef}
+                      onWheel={handleCanvasWheel}
+                      onPointerDown={handleCanvasPanStart}
+                      onPointerMove={handleCanvasPanPointerMove}
+                      onPointerUp={handleCanvasPanPointerUp}
+                      onPointerCancel={handleCanvasPanPointerUp}
+                    >
+                      <div className="canvas-toolbar">
+                        <button className="zoom-btn" onClick={zoomOut} type="button" aria-label="Zoom out">-</button>
+                        <span className="zoom-text">{Math.round(canvasZoom * 100)}%</span>
+                        <button className="zoom-btn" onClick={zoomIn} type="button" aria-label="Zoom in">+</button>
+                        <button className="zoom-btn zoom-center" onClick={centerAt100} type="button" aria-label="Center at 100%">100%</button>
                       </div>
+                      <div
+                        className="canvas-content"
+                        style={{ transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${canvasZoom})` }}
+                      >
                       <div
                         className={`baseline-card${isDragging ? ' dragging' : ''}`}
                         ref={baselineRef}
@@ -311,7 +493,138 @@ function App() {
                             : 'Basecase selection is unlocked for editing.'}
                         </p>
                       </div>
-                      <p>Next iteration: add sample-generation parameter nodes.</p>
+                      <div
+                        className={`load-config-card${isLoadCardDragging ? ' dragging' : ''}`}
+                        ref={loadConfigRef}
+                        style={{ left: `${loadCardPos.x}px`, top: `${loadCardPos.y}px` }}
+                        onPointerDown={handleLoadCardDragStart}
+                      >
+                        <div className="baseline-header">
+                          <span className="baseline-title">Load Config</span>
+                          <button
+                            type="button"
+                            className={`baseline-lock-btn${isLoadConfigLocked ? ' locked' : ''}`}
+                            onClick={() => setIsLoadConfigLocked((prev) => !prev)}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}
+                            title={isLoadConfigLocked ? 'Unlock configuration' : 'Lock configuration'}
+                            aria-label={isLoadConfigLocked ? 'Unlock configuration' : 'Lock configuration'}
+                          >
+                            <LockIcon locked={isLoadConfigLocked} />
+                            <span>{isLoadConfigLocked ? 'Locked' : 'Unlocked'}</span>
+                          </button>
+                        </div>
+
+                        <div className="load-config-grid">
+                          <label className="baseline-label" htmlFor="scale-mode-select">Mode</label>
+                          <select
+                            id="scale-mode-select"
+                            className="baseline-select"
+                            value={scaleSamplingMode}
+                            disabled={isLoadConfigLocked}
+                            onChange={(event) => setScaleSamplingMode(event.target.value as ScaleSamplingMode)}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}
+                          >
+                            <option value="truncated_normal">truncated_normal</option>
+                            <option value="uniform_bins">uniform_bins</option>
+                          </select>
+
+                          <label className="baseline-label" htmlFor="global-scale-mu">Global μ</label>
+                          <input
+                            id="global-scale-mu"
+                            className="load-input"
+                            type="number"
+                            step="0.01"
+                            value={globalScaleMu}
+                            disabled={isLoadConfigLocked}
+                            onChange={(event) => setGlobalScaleMu(Number(event.target.value))}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}
+                          />
+
+                          <label className="baseline-label" htmlFor="global-scale-sigma">Global σ</label>
+                          <input
+                            id="global-scale-sigma"
+                            className="load-input"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={globalScaleSigma}
+                            disabled={isLoadConfigLocked}
+                            onChange={(event) => setGlobalScaleSigma(Number(event.target.value))}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}
+                          />
+
+                          <label className="baseline-label" htmlFor="global-scale-min">Scale min</label>
+                          <input
+                            id="global-scale-min"
+                            className="load-input"
+                            type="number"
+                            step="0.01"
+                            value={globalScaleMin}
+                            disabled={isLoadConfigLocked}
+                            onChange={(event) => setGlobalScaleMin(Number(event.target.value))}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}
+                          />
+
+                          <label className="baseline-label" htmlFor="global-scale-max">Scale max</label>
+                          <input
+                            id="global-scale-max"
+                            className="load-input"
+                            type="number"
+                            step="0.01"
+                            value={globalScaleMax}
+                            disabled={isLoadConfigLocked}
+                            onChange={(event) => setGlobalScaleMax(Number(event.target.value))}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}
+                          />
+
+                          {scaleSamplingMode === 'uniform_bins' ? (
+                            <>
+                              <label className="baseline-label" htmlFor="uniform-bins">Uniform bins</label>
+                              <input
+                                id="uniform-bins"
+                                className="load-input"
+                                type="number"
+                                step="1"
+                                min="1"
+                                value={scaleUniformBins}
+                                disabled={isLoadConfigLocked}
+                                onChange={(event) => setScaleUniformBins(Number(event.target.value))}
+                                onPointerDown={(event) => event.stopPropagation()}
+                                onMouseDown={(event) => event.stopPropagation()}
+                              />
+                            </>
+                          ) : null}
+
+                          <label className="baseline-label" htmlFor="node-noise-sigma">Node noise σ</label>
+                          <input
+                            id="node-noise-sigma"
+                            className="load-input"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={nodeNoiseSigma}
+                            disabled={isLoadConfigLocked}
+                            onChange={(event) => setNodeNoiseSigma(Number(event.target.value))}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}
+                          />
+                        </div>
+
+                        <p className="baseline-note">
+                          {scaleSamplingMode === 'truncated_normal'
+                            ? 'Mode uses truncated normal for global scale with [min, max] bounds.'
+                            : 'Mode cycles bins across [min, max], then samples uniformly inside each selected bin.'}
+                        </p>
+                        {/* TODO(alloy-ui): wire Load Config state to backend DatasetBuildConfig/SampleGenerationConfig payload. */}
+                        {/* TODO(alloy-ui): add inline validation for min<max, sigma>0, and bins>=1 with field-level hints. */}
+                      </div>
+                      </div>
                     </div>
                   </div>
                 </Panel>

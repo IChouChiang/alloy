@@ -170,6 +170,12 @@ $$
 - 2026-02-15: Added React workbench shell (`ui/`) with Tab1/Tab2 structure, center canvas placeholder, right mock LLM chat panel, and bottom xterm terminal panel using resizable panes.
 - 2026-02-15: Updated workbench UI with light/dark mode toggle (default: light) and changed terminal mock heartbeat stream to stop automatically after 3 ticks.
 - 2026-02-15: Added draggable baseline card with basecase dropdown and a lock-icon toggle (default locked) to prevent accidental configuration changes.
+- 2026-02-15: Added draggable Load Config card with lock toggle, mode switch (`truncated_normal`/`uniform_bins`), and mode-dependent parameter UI (default: `truncated_normal`).
+- 2026-02-15: Removed canvas placeholder text and added top-right canvas zoom controls (`+/-`, percentage, Ctrl+wheel) with unbounded card dragging coordinates.
+- 2026-02-15: Added canvas pan interaction (drag blank area), viewport-bounded infinite internal plane behavior, and `100%` center reset button.
+- 2026-02-15: Refined canvas pan event capture and viewport clipping to fix premature panning stop and eliminate page-level right-side blank overflow.
+- 2026-02-15: Switched canvas panning to pointer-capture mode for continuous drag responsiveness and tightened root viewport overflow containment.
+- 2026-02-15: Changed canvas zoom interaction to direct mouse wheel zoom (no Ctrl) to avoid browser-level Ctrl+wheel conflicts.
 
 ### Multi-Layer Configuration
 ```

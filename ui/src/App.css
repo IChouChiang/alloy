@@ -31,11 +31,13 @@
 
 .app-root {
   width: 100%;
+  max-width: 100vw;
   height: 100%;
   background: var(--app-bg);
   color: var(--app-text);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .app-root.theme-dark {
@@ -109,6 +111,7 @@
   flex: 1;
   min-height: 0;
   padding: 10px;
+  overflow: hidden;
 }
 
 .panel-shell {
@@ -160,14 +163,59 @@
   margin: 12px;
   border: 1px dashed var(--canvas-border);
   border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: var(--canvas-text);
   position: relative;
   overflow: hidden;
+  background: var(--canvas-box-bg);
+  cursor: grab;
+}
+
+.canvas-placeholder.panning {
+  cursor: grabbing;
+}
+
+.canvas-content {
+  position: absolute;
+  inset: 0;
+  transform-origin: top left;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas-toolbar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--panel-bg);
+  z-index: 20;
+}
+
+.zoom-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--input-text);
+  cursor: pointer;
+}
+
+.zoom-center {
+  width: auto;
+  min-width: 48px;
+  padding: 0 8px;
+}
+
+.zoom-text {
+  min-width: 48px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--panel-title-text);
 }
 
 .canvas-box {
@@ -194,6 +242,27 @@
 }
 
 .baseline-card.dragging {
+  cursor: grabbing;
+  box-shadow: 0 10px 24px rgba(15, 23, 40, 0.14);
+}
+
+.load-config-card {
+  width: 330px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--panel-bg);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: absolute;
+  box-shadow: 0 6px 18px rgba(15, 23, 40, 0.08);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.load-config-card.dragging {
   cursor: grabbing;
   box-shadow: 0 10px 24px rgba(15, 23, 40, 0.14);
 }
@@ -269,6 +338,32 @@
   background: var(--input-bg);
   color: var(--input-text);
   font-size: 12px;
+}
+
+.load-config-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 8px 10px;
+  align-items: center;
+}
+
+.load-input {
+  min-width: 120px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--input-text);
+  font-size: 12px;
+}
+
+.load-input:disabled {
+  opacity: 0.5;
+  background: var(--tab-bg);
+  color: var(--chat-role-text);
+  border-color: var(--panel-border);
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .baseline-select:disabled {
