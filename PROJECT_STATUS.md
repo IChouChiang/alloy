@@ -168,6 +168,7 @@ $$
 - 2026-02-15: Implemented minimal topology GUI loop: FastAPI endpoints for case39 line options and topology-spec validation, static Topology tab page, and runnable server entrypoint (`python -m alloy.experiments.run_topology_gui`).
 - 2026-02-15: Fixed dataset materialization to persist real sampled `topology_id` values instead of hardcoded `"N"` in chunk outputs.
 - 2026-02-15: Added React workbench shell (`ui/`) with Tab1/Tab2 structure, center canvas placeholder, right mock LLM chat panel, and bottom xterm terminal panel using resizable panes.
+- 2026-02-15: Updated workbench UI with light/dark mode toggle (default: light) and changed terminal mock heartbeat stream to stop automatically after 3 ticks.
 
 ### Multi-Layer Configuration
 ```

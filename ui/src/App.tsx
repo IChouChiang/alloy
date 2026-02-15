@@ -6,6 +6,7 @@ import 'xterm/css/xterm.css'
 import './App.css'
 
 type TabKey = 'tab1' | 'tab2'
+type ThemeMode = 'light' | 'dark'
 
 type ChatMessage = {
   role: 'user' | 'assistant'
@@ -61,7 +62,7 @@ function MockChatPanel() {
   )
 }
 
-function TerminalPanel() {
+function TerminalPanel({ themeMode }: { themeMode: ThemeMode }) {
   const hostRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -69,12 +70,13 @@ function TerminalPanel() {
       return
     }
 
+    const isDark = themeMode === 'dark'
     const terminal = new Terminal({
       convertEol: true,
       cursorBlink: true,
       theme: {
-        background: '#05070d',
-        foreground: '#d4d8e8',
+        background: isDark ? '#05070d' : '#f8fafc',
+        foreground: isDark ? '#d4d8e8' : '#1f2937',
       },
       fontSize: 13,
     })
@@ -90,6 +92,10 @@ function TerminalPanel() {
     const timer = window.setInterval(() => {
       terminal.writeln(`[mock-log] heartbeat ${tick} | tab1 shell running`)
       tick += 1
+      if (tick > 3) {
+        terminal.writeln('[mock-log] heartbeat completed (3/3), stopping stream.')
+        window.clearInterval(timer)
+      }
     }, 1400)
 
     const resizeObserver = new ResizeObserver(() => {
@@ -102,7 +108,7 @@ function TerminalPanel() {
       resizeObserver.disconnect()
       terminal.dispose()
     }
-  }, [])
+  }, [themeMode])
 
   return (
     <div className="panel-shell terminal-shell">
@@ -114,9 +120,10 @@ function TerminalPanel() {
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabKey>('tab1')
+  const [themeMode, setThemeMode] = useState<ThemeMode>('light')
 
   return (
-    <div className="app-root">
+    <div className={`app-root theme-${themeMode}`}>
       <header className="tabs-header">
         <button
           className={activeTab === 'tab1' ? 'tab-btn active' : 'tab-btn'}
@@ -129,6 +136,13 @@ function App() {
           onClick={() => setActiveTab('tab2')}
         >
           Tab2 - Topology (Placeholder)
+        </button>
+        <div className="header-spacer" />
+        <button
+          className="theme-btn"
+          onClick={() => setThemeMode((prev) => (prev === 'light' ? 'dark' : 'light'))}
+        >
+          Theme: {themeMode === 'light' ? 'Light' : 'Dark'}
         </button>
       </header>
 
@@ -156,7 +170,7 @@ function App() {
             </Panel>
             <Separator className="resize-handle horizontal" />
             <Panel defaultSize={28} minSize={18}>
-              <TerminalPanel />
+              <TerminalPanel themeMode={themeMode} />
             </Panel>
           </Group>
         </main>
