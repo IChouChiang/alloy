@@ -207,6 +207,10 @@ class GCNNBatchBuilder:
         qd_list = []
         targets_list = []
 
+        # TODO(alloy-topology): Current implementation assumes one shared
+        # topology matrix set per batch and takes g/b matrices from the first
+        # scenario only. When multi-topology training is enabled, enforce
+        # same-topology batching or pass per-sample topology tensors.
         g_diag = b_diag = g_nd = b_nd = None
 
         for scenario in scenarios:

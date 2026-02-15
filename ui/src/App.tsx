@@ -10,7 +10,7 @@ import { LoadConfigCard } from './components/workbench/LoadConfigCard'
 import { MockChatPanel } from './components/workbench/MockChatPanel'
 import { Tab2Placeholder } from './components/workbench/Tab2Placeholder'
 import { TerminalPanel } from './components/workbench/TerminalPanel'
-import type { Point, ScaleSamplingMode, TabKey, ThemeMode } from './components/workbench/types'
+import type { Point, ScaleSamplingMode, TabKey, ThemeMode, TopologySelectionState } from './components/workbench/types'
 
 const PANDAPOWER_BASECASES = [
   'case4gs',
@@ -41,6 +41,12 @@ const PANDAPOWER_BASECASES = [
   'case9241pegase',
 ] as const
 
+const DEFAULT_TOPOLOGY_SELECTION: TopologySelectionState = {
+  specs: [{ topology_id: 'N', line_outages: [] }],
+  seenTopologyIds: ['N'],
+  unseenTopologyIds: [],
+}
+
 /**
  * Root workbench application shell.
  *
@@ -68,6 +74,7 @@ function App() {
   const [globalScaleMax, setGlobalScaleMax] = useState(1.5)
   const [scaleUniformBins, setScaleUniformBins] = useState(20)
   const [nodeNoiseSigma, setNodeNoiseSigma] = useState(0.05)
+  const [topologySelection, setTopologySelection] = useState<TopologySelectionState>(DEFAULT_TOPOLOGY_SELECTION)
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const baselineRef = useRef<HTMLDivElement | null>(null)
   const loadConfigRef = useRef<HTMLDivElement | null>(null)
@@ -344,6 +351,8 @@ function App() {
     setActiveTab('tab2')
   }
 
+  const selectedTopologyCount = topologySelection.specs.length
+
   /** Toggles application theme between light and dark modes. */
   const toggleThemeMode = () => {
     setThemeMode((prev) => (prev === 'light' ? 'dark' : 'light'))
@@ -372,7 +381,7 @@ function App() {
           className={activeTab === 'tab2' ? 'tab-btn active' : 'tab-btn'}
           onClick={showTopologyTab}
         >
-          Tab2 - Topology (Placeholder)
+          Tab2 - Topology ({selectedTopologyCount})
         </button>
         <div className="header-spacer" />
         <button
@@ -390,7 +399,17 @@ function App() {
               <Group orientation="horizontal">
                 <Panel defaultSize={72} minSize={35}>
                   <div className="panel-shell canvas-shell">
-                    <div className="panel-title">Center Canvas (UI Shell)</div>
+                    <div className="panel-title panel-title-row">
+                      <span>Center Canvas (UI Shell)</span>
+                      <div className="panel-title-actions">
+                        <span className="topology-inline-summary">
+                          Topology set: {topologySelection.specs.length} (seen {topologySelection.seenTopologyIds.length} / unseen {topologySelection.unseenTopologyIds.length})
+                        </span>
+                        <button className="topology-nav-btn" type="button" onClick={showTopologyTab}>
+                          Open Topology Editor
+                        </button>
+                      </div>
+                    </div>
                     <div
                       className={`canvas-placeholder${isCanvasPanning ? ' panning' : ''}`}
                       ref={canvasRef}
@@ -470,7 +489,13 @@ function App() {
             </Panel>
           </Group>
         </main>
-      ) : <Tab2Placeholder />}
+      ) : (
+        <Tab2Placeholder
+          selection={topologySelection}
+          onSelectionChange={setTopologySelection}
+          onBackToWorkbench={showWorkbenchTab}
+        />
+      )}
     </div>
   )
 }

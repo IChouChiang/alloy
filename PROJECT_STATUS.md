@@ -184,6 +184,7 @@ $$
 - 2026-02-15: Added minimal card registry/schema (`CardDefinition`, `PortSpec`) and wired `App.tsx` to consume card metadata as groundwork for plugin-style card expansion.
 - 2026-02-15: Added VS Code-hover-friendly TSDoc baseline for workbench schema and core cards (`types.ts`, `cardDefinitions.ts`, `CaseSelectCard.tsx`, `LoadConfigCard.tsx`) to standardize frontend in-editor documentation.
 - 2026-02-15: Expanded frontend function-level documentation coverage by annotating workbench handlers and replacing major inline callbacks with named documented handlers (`App.tsx`, `MockChatPanel.tsx`, `TerminalPanel.tsx`, `CaseSelectCard.tsx`, `LoadConfigCard.tsx`).
+- 2026-02-15: Started Topology implementation vertical slice: added Tab2 visual topology editor (N fixed + N-1 selection, seen/unseen grouping, backend validation/save), integrated app-level topology state, and added backend case39 graph endpoint plus no-islanding validation in topology API.
 
 ### Multi-Layer Configuration
 ```

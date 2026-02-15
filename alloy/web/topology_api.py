@@ -40,6 +40,149 @@ class LineOption(BaseModel):
     name: str
 
 
+class BusNode(BaseModel):
+    """One bus node with inferred role for topology visualization."""
+
+    bus_idx: int
+    name: str
+    kind: str
+
+
+class Case39GraphResponse(BaseModel):
+    """Case39 graph payload for visual topology editor."""
+
+    buses: list[BusNode]
+    lines: list[LineOption]
+
+
+def _infer_bus_kind(net: pandapowerNet, bus_idx: int) -> str:
+    """Infer visual node kind from pandapower tables.
+
+    Args:
+        net: Baseline pandapower net.
+        bus_idx: Bus index.
+
+    Returns:
+        Node kind label for UI coloring.
+    """
+    if not net.ext_grid.empty and int(bus_idx) in net.ext_grid["bus"].to_numpy():
+        return "slack"
+    if not net.gen.empty and int(bus_idx) in net.gen["bus"].to_numpy():
+        return "gen"
+    if not net.load.empty and int(bus_idx) in net.load["bus"].to_numpy():
+        return "load"
+    return "bus"
+
+
+def _case39_bus_nodes() -> list[BusNode]:
+    """Build case39 bus-node metadata for topology visualization.
+
+    Returns:
+        Sorted bus-node list by bus index.
+    """
+    net = cast(pandapowerNet, pn.case39())
+    nodes: list[BusNode] = []
+    for bus_idx, row in net.bus.iterrows():
+        idx = int(bus_idx)
+        nodes.append(
+            BusNode(
+                bus_idx=idx,
+                name=str(row.get("name") or f"bus-{idx}"),
+                kind=_infer_bus_kind(net, idx),
+            )
+        )
+    nodes.sort(key=lambda item: item.bus_idx)
+    return nodes
+
+
+def _resolve_outage_line_indices(
+    net: pandapowerNet, line_outages: tuple[LineOutageSpec, ...]
+) -> set[int]:
+    """Resolve outage endpoint pairs into concrete baseline line indices.
+
+    Args:
+        net: Baseline network.
+        line_outages: Outage endpoint pairs.
+
+    Returns:
+        Set of line indices to remove.
+
+    Raises:
+        ValueError: If an outage pair does not match any line.
+    """
+    blocked: set[int] = set()
+    for outage in line_outages:
+        from_bus = int(outage.from_bus)
+        to_bus = int(outage.to_bus)
+        mask_forward = (net.line["from_bus"] == from_bus) & (net.line["to_bus"] == to_bus)
+        mask_reverse = (net.line["from_bus"] == to_bus) & (net.line["to_bus"] == from_bus)
+        matched = net.line.index[mask_forward | mask_reverse]
+        if len(matched) == 0:
+            raise ValueError(f"Line outage ({from_bus}, {to_bus}) not found in case39 baseline.")
+        for line_idx in matched:
+            blocked.add(int(line_idx))
+    return blocked
+
+
+def _is_connected_without_islands(
+    net: pandapowerNet, blocked_line_indices: set[int]
+) -> bool:
+    """Check whether remaining grid stays fully connected.
+
+    Connectivity graph includes active line edges and transformer edges.
+
+    Args:
+        net: Baseline network.
+        blocked_line_indices: Removed line indices.
+
+    Returns:
+        True when all buses remain in one connected component.
+    """
+    bus_ids = [int(item) for item in net.bus.index.to_numpy()]
+    if not bus_ids:
+        return True
+
+    adjacency: dict[int, set[int]] = {bus: set() for bus in bus_ids}
+
+    for line_idx, row in net.line.iterrows():
+        idx = int(line_idx)
+        if idx in blocked_line_indices:
+            continue
+        from_bus = int(row["from_bus"])
+        to_bus = int(row["to_bus"])
+        adjacency[from_bus].add(to_bus)
+        adjacency[to_bus].add(from_bus)
+
+    if not net.trafo.empty:
+        for _, row in net.trafo.iterrows():
+            hv_bus = int(row["hv_bus"])
+            lv_bus = int(row["lv_bus"])
+            adjacency[hv_bus].add(lv_bus)
+            adjacency[lv_bus].add(hv_bus)
+
+    if not net.trafo3w.empty:
+        for _, row in net.trafo3w.iterrows():
+            hv_bus = int(row["hv_bus"])
+            mv_bus = int(row["mv_bus"])
+            lv_bus = int(row["lv_bus"])
+            triples = ((hv_bus, mv_bus), (hv_bus, lv_bus), (mv_bus, lv_bus))
+            for left, right in triples:
+                adjacency[left].add(right)
+                adjacency[right].add(left)
+
+    start = bus_ids[0]
+    visited: set[int] = {start}
+    stack = [start]
+    while stack:
+        node = stack.pop()
+        for neighbor in adjacency[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                stack.append(neighbor)
+
+    return len(visited) == len(bus_ids)
+
+
 def _case39_line_options() -> list[LineOption]:
     """Build selectable case39 line options for GUI.
 
@@ -107,6 +250,14 @@ def _normalize_topology_specs(payload: list[dict[str, Any]]) -> list[TopologySpe
     ids = [spec.topology_id for spec in normalized]
     if len(ids) != len(set(ids)):
         raise ValueError("Duplicated topology_id values are not allowed.")
+
+    base_net = cast(pandapowerNet, pn.case39())
+    for spec in normalized:
+        blocked = _resolve_outage_line_indices(base_net, spec.line_outages)
+        if not _is_connected_without_islands(base_net, blocked):
+            raise ValueError(
+                f"Topology {spec.topology_id} introduces islands and is not allowed."
+            )
     return normalized
 
 
@@ -135,6 +286,13 @@ def create_app() -> FastAPI:
     @app.get("/api/topology/case39/lines", response_model=list[LineOption])
     def get_case39_lines() -> list[LineOption]:
         return _case39_line_options()
+
+    @app.get("/api/topology/case39/graph", response_model=Case39GraphResponse)
+    def get_case39_graph() -> Case39GraphResponse:
+        return Case39GraphResponse(
+            buses=_case39_bus_nodes(),
+            lines=_case39_line_options(),
+        )
 
     @app.post("/api/topology/specs/validate", response_model=ValidateSpecsResponse)
     def validate_topology_specs(

@@ -60,3 +60,65 @@ export type CardDefinition = {
   /** Declared input/output ports for this card. */
   ports: PortSpec[]
 }
+
+/** Visual category for one bus node in topology graph. */
+export type TopologyBusKind = 'slack' | 'gen' | 'load' | 'bus'
+
+/** Bus node metadata from topology graph API. */
+export type TopologyBusNode = {
+  /** Bus index in pandapower network. */
+  bus_idx: number
+  /** Human-readable bus label. */
+  name: string
+  /** Visual category used by node styling. */
+  kind: TopologyBusKind
+}
+
+/** Line edge metadata from topology graph API. */
+export type TopologyLineEdge = {
+  /** Stable line index in pandapower baseline network. */
+  line_idx: number
+  /** Endpoint bus index A. */
+  from_bus: number
+  /** Endpoint bus index B. */
+  to_bus: number
+  /** Display label for UI. */
+  name: string
+}
+
+/** Graph payload returned by case39 topology API. */
+export type TopologyGraphPayload = {
+  /** Bus node list. */
+  buses: TopologyBusNode[]
+  /** Line edge list. */
+  lines: TopologyLineEdge[]
+}
+
+/** One line outage object in topology spec. */
+export type LineOutageSpec = {
+  /** Outage endpoint bus index A. */
+  from_bus: number
+  /** Outage endpoint bus index B. */
+  to_bus: number
+}
+
+/** One topology object sent to backend validation/dataset build config. */
+export type TopologySpec = {
+  /** Unique topology identifier, for example N or N-1_1_4_14. */
+  topology_id: string
+  /** Outage line list for this topology. */
+  line_outages: LineOutageSpec[]
+}
+
+/** Split group where topology is used during dataset construction. */
+export type TopologySplitGroup = 'seen' | 'unseen'
+
+/** Persisted topology editor output consumed by app-level state. */
+export type TopologySelectionState = {
+  /** Full topology list including baseline N. */
+  specs: TopologySpec[]
+  /** Topology IDs assigned to train/val/test_seen pool. */
+  seenTopologyIds: string[]
+  /** Topology IDs assigned to test_unseen pool. */
+  unseenTopologyIds: string[]
+}
