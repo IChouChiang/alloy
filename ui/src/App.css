@@ -201,6 +201,7 @@
 .baseline-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 
@@ -216,6 +217,31 @@
   background: var(--tab-active-bg);
   border: 1px solid var(--tab-active-border);
   color: var(--tab-active-text);
+}
+
+.baseline-lock-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--tab-border);
+  background: var(--tab-bg);
+  color: var(--tab-text);
+  cursor: pointer;
+}
+
+.baseline-lock-btn.locked {
+  background: var(--tab-active-bg);
+  border-color: var(--tab-active-border);
+  color: var(--tab-active-text);
+}
+
+.lock-icon {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
 }
 
 .baseline-row {

@@ -47,7 +47,21 @@ const PANDAPOWER_BASECASES = [
   'case9241pegase',
 ] as const
 
-const LOCKED_BASECASE = 'case39'
+function LockIcon({ locked }: { locked: boolean }) {
+  if (locked) {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="lock-icon">
+        <path d="M7 10V8a5 5 0 1 1 10 0v2h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h1Zm2 0h6V8a3 3 0 1 0-6 0v2Z" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="lock-icon">
+      <path d="M17 10h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h9V8a3 3 0 1 0-6 0 1 1 0 0 1-2 0 5 5 0 1 1 10 0v2Z" />
+    </svg>
+  )
+}
 
 function MockChatPanel() {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -157,6 +171,8 @@ function TerminalPanel({ themeMode }: { themeMode: ThemeMode }) {
 function App() {
   const [activeTab, setActiveTab] = useState<TabKey>('tab1')
   const [themeMode, setThemeMode] = useState<ThemeMode>('light')
+  const [selectedBasecase, setSelectedBasecase] = useState<string>('case39')
+  const [isBasecaseLocked, setIsBasecaseLocked] = useState(true)
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const baselineRef = useRef<HTMLDivElement | null>(null)
   const dragState = useRef<{ isDragging: boolean; offsetX: number; offsetY: number }>({
@@ -258,15 +274,27 @@ function App() {
                       >
                         <div className="baseline-header">
                           <span className="baseline-title">Baseline</span>
-                          <span className="baseline-badge">Locked</span>
+                          <button
+                            type="button"
+                            className={`baseline-lock-btn${isBasecaseLocked ? ' locked' : ''}`}
+                            onClick={() => setIsBasecaseLocked((prev) => !prev)}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}
+                            title={isBasecaseLocked ? 'Unlock configuration' : 'Lock configuration'}
+                            aria-label={isBasecaseLocked ? 'Unlock configuration' : 'Lock configuration'}
+                          >
+                            <LockIcon locked={isBasecaseLocked} />
+                            <span>{isBasecaseLocked ? 'Locked' : 'Unlocked'}</span>
+                          </button>
                         </div>
                         <div className="baseline-row">
                           <label className="baseline-label" htmlFor="basecase-select">Base case</label>
                           <select
                             id="basecase-select"
                             className="baseline-select"
-                            value={LOCKED_BASECASE}
-                            disabled
+                            value={selectedBasecase}
+                            disabled={isBasecaseLocked}
+                            onChange={(event) => setSelectedBasecase(event.target.value)}
                             onPointerDown={(event) => event.stopPropagation()}
                             onMouseDown={(event) => event.stopPropagation()}
                           >
@@ -277,7 +305,11 @@ function App() {
                             ))}
                           </select>
                         </div>
-                        <p className="baseline-note">Dropdown is intentionally locked to case39 for current development stage.</p>
+                        <p className="baseline-note">
+                          {isBasecaseLocked
+                            ? 'Basecase selection is locked to prevent accidental edits.'
+                            : 'Basecase selection is unlocked for editing.'}
+                        </p>
                       </div>
                       <p>Next iteration: add sample-generation parameter nodes.</p>
                     </div>
