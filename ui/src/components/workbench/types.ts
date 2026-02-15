@@ -86,12 +86,33 @@ export type TopologyLineEdge = {
   name: string
 }
 
+/** Edge category in visual topology graph. */
+export type TopologyEdgeKind = 'line' | 'trafo' | 'trafo3w'
+
+/** Generic visual edge metadata in topology graph. */
+export type TopologyVisualEdge = {
+  /** Stable graph edge identifier. */
+  edge_id: string
+  /** Edge category used by styling and interaction rules. */
+  kind: TopologyEdgeKind
+  /** Endpoint bus index A. */
+  from_bus: number
+  /** Endpoint bus index B. */
+  to_bus: number
+  /** Display label. */
+  name: string
+  /** Optional line index for selectable outage edges. */
+  line_idx?: number
+}
+
 /** Graph payload returned by case39 topology API. */
 export type TopologyGraphPayload = {
   /** Bus node list. */
   buses: TopologyBusNode[]
-  /** Line edge list. */
+  /** Selectable line edge list used for outage specs. */
   lines: TopologyLineEdge[]
+  /** Full visual edge list including transformers. */
+  edges: TopologyVisualEdge[]
 }
 
 /** One line outage object in topology spec. */

@@ -53,6 +53,18 @@ class Case39GraphResponse(BaseModel):
 
     buses: list[BusNode]
     lines: list[LineOption]
+    edges: list["GraphEdge"]
+
+
+class GraphEdge(BaseModel):
+    """Visual graph edge returned to topology editor."""
+
+    edge_id: str
+    kind: str
+    from_bus: int
+    to_bus: int
+    name: str
+    line_idx: int | None = None
 
 
 def _infer_bus_kind(net: pandapowerNet, bus_idx: int) -> str:
@@ -114,11 +126,17 @@ def _resolve_outage_line_indices(
     for outage in line_outages:
         from_bus = int(outage.from_bus)
         to_bus = int(outage.to_bus)
-        mask_forward = (net.line["from_bus"] == from_bus) & (net.line["to_bus"] == to_bus)
-        mask_reverse = (net.line["from_bus"] == to_bus) & (net.line["to_bus"] == from_bus)
+        mask_forward = (net.line["from_bus"] == from_bus) & (
+            net.line["to_bus"] == to_bus
+        )
+        mask_reverse = (net.line["from_bus"] == to_bus) & (
+            net.line["to_bus"] == from_bus
+        )
         matched = net.line.index[mask_forward | mask_reverse]
         if len(matched) == 0:
-            raise ValueError(f"Line outage ({from_bus}, {to_bus}) not found in case39 baseline.")
+            raise ValueError(
+                f"Line outage ({from_bus}, {to_bus}) not found in case39 baseline."
+            )
         for line_idx in matched:
             blocked.add(int(line_idx))
     return blocked
@@ -204,6 +222,67 @@ def _case39_line_options() -> list[LineOption]:
         )
     options.sort(key=lambda item: item.line_idx)
     return options
+
+
+def _case39_graph_edges() -> list[GraphEdge]:
+    """Build full visual edge list (lines + transformers) for case39 graph.
+
+    Returns:
+        Sorted edge list by edge_id.
+    """
+    net = cast(pandapowerNet, pn.case39())
+    edges: list[GraphEdge] = []
+
+    for line_idx, row in net.line.iterrows():
+        idx = int(line_idx)
+        from_bus = int(row["from_bus"])
+        to_bus = int(row["to_bus"])
+        edges.append(
+            GraphEdge(
+                edge_id=f"line-{idx}",
+                kind="line",
+                from_bus=from_bus,
+                to_bus=to_bus,
+                name=f"line-{idx}: {from_bus} -> {to_bus}",
+                line_idx=idx,
+            )
+        )
+
+    for trafo_idx, row in net.trafo.iterrows():
+        idx = int(trafo_idx)
+        hv_bus = int(row["hv_bus"])
+        lv_bus = int(row["lv_bus"])
+        edges.append(
+            GraphEdge(
+                edge_id=f"trafo-{idx}",
+                kind="trafo",
+                from_bus=hv_bus,
+                to_bus=lv_bus,
+                name=f"trafo-{idx}: {hv_bus} -> {lv_bus}",
+                line_idx=None,
+            )
+        )
+
+    for trafo3w_idx, row in net.trafo3w.iterrows():
+        idx = int(trafo3w_idx)
+        hv_bus = int(row["hv_bus"])
+        mv_bus = int(row["mv_bus"])
+        lv_bus = int(row["lv_bus"])
+        pairs = ((hv_bus, mv_bus), (hv_bus, lv_bus), (mv_bus, lv_bus))
+        for pair_idx, (left, right) in enumerate(pairs):
+            edges.append(
+                GraphEdge(
+                    edge_id=f"trafo3w-{idx}-{pair_idx}",
+                    kind="trafo3w",
+                    from_bus=left,
+                    to_bus=right,
+                    name=f"trafo3w-{idx}: {left} -> {right}",
+                    line_idx=None,
+                )
+            )
+
+    edges.sort(key=lambda item: item.edge_id)
+    return edges
 
 
 def _normalize_topology_specs(payload: list[dict[str, Any]]) -> list[TopologySpec]:
@@ -292,6 +371,7 @@ def create_app() -> FastAPI:
         return Case39GraphResponse(
             buses=_case39_bus_nodes(),
             lines=_case39_line_options(),
+            edges=_case39_graph_edges(),
         )
 
     @app.post("/api/topology/specs/validate", response_model=ValidateSpecsResponse)
