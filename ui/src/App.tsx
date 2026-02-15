@@ -7,7 +7,7 @@ import { WORKBENCH_CARD_DEFINITIONS } from './components/workbench/cardDefinitio
 import { DEFAULT_TOPOLOGY_SELECTION, PANDAPOWER_BASECASES } from './components/workbench/constants'
 import { useCardDrag } from './components/workbench/hooks/useCardDrag'
 import { MockChatPanel } from './components/workbench/MockChatPanel'
-import { Tab2Placeholder } from './components/workbench/Tab2Placeholder'
+import { Tab2TopologyEditor } from './components/workbench/Tab2TopologyEditor'
 import { TerminalPanel } from './components/workbench/TerminalPanel'
 import type { Point, ScaleSamplingMode, TabKey, ThemeMode, TopologySelectionState } from './components/workbench/types'
 import { WorkbenchCanvasPanel } from './components/workbench/WorkbenchCanvasPanel'
@@ -317,7 +317,7 @@ function App() {
           </Group>
         </main>
       ) : (
-        <Tab2Placeholder
+        <Tab2TopologyEditor
           selection={topologySelection}
           onSelectionChange={setTopologySelection}
           onBackToWorkbench={showWorkbenchTab}

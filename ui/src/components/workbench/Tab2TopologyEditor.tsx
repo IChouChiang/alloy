@@ -2,11 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import './Tab2TopologyEditor.css'
 
 import type {
-  TopologyGraphPayload,
-  TopologySelectionState,
-  TopologySpec,
-  TopologySplitGroup,
-  TopologyVisualEdge,
+    TopologyGraphPayload,
+    TopologySelectionState,
+    TopologySpec,
+    TopologySplitGroup,
+    TopologyVisualEdge,
 } from './types'
 
 type Tab2TopologyEditorProps = {
@@ -39,7 +39,7 @@ const nodeKindColor: Record<string, string> = {
  * Provides graph-based N/N-1 selection, split grouping, backend validation,
  * and app-level persistence through callback props.
  */
-export function Tab2Placeholder({
+export function Tab2TopologyEditor({
   selection,
   onSelectionChange,
   onBackToWorkbench,
