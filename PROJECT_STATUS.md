@@ -189,6 +189,8 @@ $$
 - 2026-02-15: Started Phase 2 backend topology split support by adding split-level seen/unseen topology-spec configuration in dataset builder with per-split provider resolution and metadata persistence (`split_topology`).
 - 2026-02-15: Decoupled Tab2 topology editor styles into component-scoped stylesheet (`ui/src/components/workbench/Tab2TopologyEditor.css`) and added graph pan + bus drag + fit/reset layout with local layout persistence.
 - 2026-02-15: Enhanced Tab2 topology side card with bulk split assignment (`All seen`/`All unseen`), per-topology removal, and list-to-graph hover focus highlighting for faster topology curation.
+- 2026-02-15: Added explicit frontend Dev Rule requiring TSDoc on complex TypeScript/React code and enforcing modular split strategy for large files (>300 lines).
+- 2026-02-15: Started App modularization phase 1 by extracting workbench constants, header UI, and center canvas panel component from `ui/src/App.tsx` while preserving existing behavior.
 
 ### Multi-Layer Configuration
 ```

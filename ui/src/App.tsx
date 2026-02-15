@@ -3,49 +3,14 @@ import { Group, Panel, Separator } from 'react-resizable-panels'
 import 'xterm/css/xterm.css'
 import './App.css'
 
-import { CanvasToolbar } from './components/workbench/CanvasToolbar'
 import { WORKBENCH_CARD_DEFINITIONS } from './components/workbench/cardDefinitions'
-import { CaseSelectCard } from './components/workbench/CaseSelectCard'
-import { LoadConfigCard } from './components/workbench/LoadConfigCard'
+import { DEFAULT_TOPOLOGY_SELECTION, PANDAPOWER_BASECASES } from './components/workbench/constants'
 import { MockChatPanel } from './components/workbench/MockChatPanel'
 import { Tab2Placeholder } from './components/workbench/Tab2Placeholder'
 import { TerminalPanel } from './components/workbench/TerminalPanel'
 import type { Point, ScaleSamplingMode, TabKey, ThemeMode, TopologySelectionState } from './components/workbench/types'
-
-const PANDAPOWER_BASECASES = [
-  'case4gs',
-  'case5',
-  'case6ww',
-  'case9',
-  'case11_iwamoto',
-  'case14',
-  'case24_ieee_rts',
-  'case30',
-  'case_ieee30',
-  'case33bw',
-  'case39',
-  'case57',
-  'case89pegase',
-  'case118',
-  'case145',
-  'case_illinois200',
-  'case300',
-  'case1354pegase',
-  'case1888rte',
-  'case2848rte',
-  'case2869pegase',
-  'case3120sp',
-  'case6470rte',
-  'case6495rte',
-  'case6515rte',
-  'case9241pegase',
-] as const
-
-const DEFAULT_TOPOLOGY_SELECTION: TopologySelectionState = {
-  specs: [{ topology_id: 'N', line_outages: [] }],
-  seenTopologyIds: ['N'],
-  unseenTopologyIds: [],
-}
+import { WorkbenchCanvasPanel } from './components/workbench/WorkbenchCanvasPanel'
+import { WorkbenchHeader } from './components/workbench/WorkbenchHeader'
 
 /**
  * Root workbench application shell.
@@ -104,14 +69,6 @@ function App() {
 
   const baselineHeight = baselineRef.current?.offsetHeight ?? 156
   const loadHeight = loadConfigRef.current?.offsetHeight ?? 292
-  const baselineOutputPort = {
-    x: cardPos.x + caseCardDef.width,
-    y: cardPos.y + baselineHeight / 2,
-  }
-  const loadInputPort = {
-    x: loadCardPos.x,
-    y: loadCardPos.y + loadHeight / 2,
-  }
 
   /** Clamps a zoom value to the configured min/max range. */
   const clampZoom = useCallback((value: number) => {
@@ -370,27 +327,14 @@ function App() {
 
   return (
     <div className={`app-root theme-${themeMode}`}>
-      <header className="tabs-header">
-        <button
-          className={activeTab === 'tab1' ? 'tab-btn active' : 'tab-btn'}
-          onClick={showWorkbenchTab}
-        >
-          Tab1 - Workbench
-        </button>
-        <button
-          className={activeTab === 'tab2' ? 'tab-btn active' : 'tab-btn'}
-          onClick={showTopologyTab}
-        >
-          Tab2 - Topology ({selectedTopologyCount})
-        </button>
-        <div className="header-spacer" />
-        <button
-          className="theme-btn"
-          onClick={toggleThemeMode}
-        >
-          Theme: {themeMode === 'light' ? 'Light' : 'Dark'}
-        </button>
-      </header>
+      <WorkbenchHeader
+        activeTab={activeTab}
+        themeMode={themeMode}
+        selectedTopologyCount={selectedTopologyCount}
+        onShowWorkbenchTab={showWorkbenchTab}
+        onShowTopologyTab={showTopologyTab}
+        onToggleThemeMode={toggleThemeMode}
+      />
 
       {activeTab === 'tab1' ? (
         <main className="workbench-main">
@@ -398,84 +342,56 @@ function App() {
             <Panel defaultSize={72} minSize={35}>
               <Group orientation="horizontal">
                 <Panel defaultSize={72} minSize={35}>
-                  <div className="panel-shell canvas-shell">
-                    <div className="panel-title panel-title-row">
-                      <span>Center Canvas (UI Shell)</span>
-                      <div className="panel-title-actions">
-                        <span className="topology-inline-summary">
-                          Topology set: {topologySelection.specs.length} (seen {topologySelection.seenTopologyIds.length} / unseen {topologySelection.unseenTopologyIds.length})
-                        </span>
-                        <button className="topology-nav-btn" type="button" onClick={showTopologyTab}>
-                          Open Topology Editor
-                        </button>
-                      </div>
-                    </div>
-                    <div
-                      className={`canvas-placeholder${isCanvasPanning ? ' panning' : ''}`}
-                      ref={canvasRef}
-                      onWheel={handleCanvasWheel}
-                      onPointerDown={handleCanvasPanStart}
-                      onPointerMove={handleCanvasPanPointerMove}
-                      onPointerUp={handleCanvasPanPointerUp}
-                      onPointerCancel={handleCanvasPanPointerUp}
-                    >
-                      <CanvasToolbar
-                        zoomPercent={Math.round(canvasZoom * 100)}
-                        onZoomOut={zoomOut}
-                        onZoomIn={zoomIn}
-                        onCenterAt100={centerAt100}
-                      />
-                      <div
-                        className="canvas-content"
-                        style={{ transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${canvasZoom})` }}
-                      >
-                        <svg className="canvas-links" aria-hidden="true">
-                          <line
-                            x1={baselineOutputPort.x}
-                            y1={baselineOutputPort.y}
-                            x2={loadInputPort.x}
-                            y2={loadInputPort.y}
-                            className="canvas-link-line"
-                          />
-                        </svg>
-                        <CaseSelectCard
-                          position={cardPos}
-                          isDragging={isDragging}
-                          cardRef={baselineRef}
-                          selectedBasecase={selectedBasecase}
-                          isLocked={isBasecaseLocked}
-                          basecases={PANDAPOWER_BASECASES}
-                          onCardPointerDown={handleBaselineCardPointerDown}
-                          onHeaderPointerDown={handleDragStart}
-                          onToggleLock={toggleBasecaseLock}
-                          onChangeBasecase={setSelectedBasecase}
-                        />
-                        <LoadConfigCard
-                          position={loadCardPos}
-                          isDragging={isLoadCardDragging}
-                          cardRef={loadConfigRef}
-                          isLocked={isLoadConfigLocked}
-                          scaleSamplingMode={scaleSamplingMode}
-                          globalScaleMu={globalScaleMu}
-                          globalScaleSigma={globalScaleSigma}
-                          globalScaleMin={globalScaleMin}
-                          globalScaleMax={globalScaleMax}
-                          scaleUniformBins={scaleUniformBins}
-                          nodeNoiseSigma={nodeNoiseSigma}
-                          onCardPointerDown={handleLoadCardPointerDown}
-                          onHeaderPointerDown={handleLoadCardDragStart}
-                          onToggleLock={toggleLoadConfigLock}
-                          onModeChange={setScaleSamplingMode}
-                          onGlobalScaleMuChange={setGlobalScaleMu}
-                          onGlobalScaleSigmaChange={setGlobalScaleSigma}
-                          onGlobalScaleMinChange={setGlobalScaleMin}
-                          onGlobalScaleMaxChange={setGlobalScaleMax}
-                          onScaleUniformBinsChange={setScaleUniformBins}
-                          onNodeNoiseSigmaChange={setNodeNoiseSigma}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <WorkbenchCanvasPanel
+                    canvasRef={canvasRef}
+                    baselineRef={baselineRef}
+                    loadConfigRef={loadConfigRef}
+                    canvasZoom={canvasZoom}
+                    canvasOffset={canvasOffset}
+                    isCanvasPanning={isCanvasPanning}
+                    cardPos={cardPos}
+                    loadCardPos={loadCardPos}
+                    isDragging={isDragging}
+                    isLoadCardDragging={isLoadCardDragging}
+                    selectedBasecase={selectedBasecase}
+                    isBasecaseLocked={isBasecaseLocked}
+                    isLoadConfigLocked={isLoadConfigLocked}
+                    scaleSamplingMode={scaleSamplingMode}
+                    globalScaleMu={globalScaleMu}
+                    globalScaleSigma={globalScaleSigma}
+                    globalScaleMin={globalScaleMin}
+                    globalScaleMax={globalScaleMax}
+                    scaleUniformBins={scaleUniformBins}
+                    nodeNoiseSigma={nodeNoiseSigma}
+                    topologySelection={topologySelection}
+                    basecases={PANDAPOWER_BASECASES}
+                    caseCardWidth={caseCardDef.width}
+                    loadCardWidth={loadCardDef.width}
+                    baselineHeight={baselineHeight}
+                    loadHeight={loadHeight}
+                    onShowTopologyTab={showTopologyTab}
+                    onWheel={handleCanvasWheel}
+                    onCanvasPointerDown={handleCanvasPanStart}
+                    onCanvasPointerMove={handleCanvasPanPointerMove}
+                    onCanvasPointerUp={handleCanvasPanPointerUp}
+                    onZoomOut={zoomOut}
+                    onZoomIn={zoomIn}
+                    onCenterAt100={centerAt100}
+                    onBaselineCardPointerDown={handleBaselineCardPointerDown}
+                    onBaselineHeaderPointerDown={handleDragStart}
+                    onToggleBasecaseLock={toggleBasecaseLock}
+                    onChangeBasecase={setSelectedBasecase}
+                    onLoadCardPointerDown={handleLoadCardPointerDown}
+                    onLoadHeaderPointerDown={handleLoadCardDragStart}
+                    onToggleLoadConfigLock={toggleLoadConfigLock}
+                    onScaleSamplingModeChange={setScaleSamplingMode}
+                    onGlobalScaleMuChange={setGlobalScaleMu}
+                    onGlobalScaleSigmaChange={setGlobalScaleSigma}
+                    onGlobalScaleMinChange={setGlobalScaleMin}
+                    onGlobalScaleMaxChange={setGlobalScaleMax}
+                    onScaleUniformBinsChange={setScaleUniformBins}
+                    onNodeNoiseSigmaChange={setNodeNoiseSigma}
+                  />
                 </Panel>
                 <Separator className="resize-handle vertical" />
                 <Panel defaultSize={28} minSize={20}>
