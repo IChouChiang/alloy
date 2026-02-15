@@ -1,9 +1,9 @@
 import type { RefObject } from 'react'
 
+import { CaseSelectCard } from '../cards/CaseSelectCard'
+import { LoadConfigCard } from '../cards/LoadConfigCard'
+import type { Point, ScaleSamplingMode, TopologySelectionState } from '../types'
 import { CanvasToolbar } from './CanvasToolbar'
-import { CaseSelectCard } from './CaseSelectCard'
-import { LoadConfigCard } from './LoadConfigCard'
-import type { Point, ScaleSamplingMode, TopologySelectionState } from './types'
 
 type WorkbenchCanvasPanelProps = {
   canvasRef: RefObject<HTMLDivElement | null>

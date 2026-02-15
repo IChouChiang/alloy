@@ -1,4 +1,4 @@
-import type { CardDefinition } from './types'
+import type { CardDefinition } from '../types'
 
 /**
  * Registry of built-in workbench cards.

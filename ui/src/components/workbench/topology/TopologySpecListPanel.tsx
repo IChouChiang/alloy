@@ -2,7 +2,7 @@ import type {
   TopologySelectionState,
   TopologySpec,
   TopologySplitGroup,
-} from './types'
+} from '../types'
 
 type TopologySpecListPanelProps = {
   assignment: TopologySelectionState

@@ -6,7 +6,7 @@ import type {
   TopologySpec,
   TopologySplitGroup,
   TopologyVisualEdge,
-} from '../types'
+} from '../../types'
 
 const TOPOLOGY_API_BASE_CANDIDATES = ['', 'http://localhost:8000', 'http://127.0.0.1:8000'] as const
 

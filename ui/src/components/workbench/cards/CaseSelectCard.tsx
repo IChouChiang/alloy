@@ -1,7 +1,7 @@
 import type { ChangeEvent, PointerEvent, RefObject, SyntheticEvent } from 'react'
 
+import type { Point } from '../types'
 import { LockIcon } from './LockIcon'
-import type { Point } from './types'
 
 /** Props for the Case Select card. */
 type CaseSelectCardProps = {

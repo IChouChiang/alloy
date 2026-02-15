@@ -1,7 +1,7 @@
 import type { ChangeEvent, PointerEvent, RefObject, SyntheticEvent } from 'react'
 
+import type { Point, ScaleSamplingMode } from '../types'
 import { LockIcon } from './LockIcon'
-import type { Point, ScaleSamplingMode } from './types'
 
 /** Props for the Load Config card. */
 type LoadConfigCardProps = {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import type { TopologyBusNode, TopologyGraphPayload } from '../types'
+import type { TopologyBusNode, TopologyGraphPayload } from '../../types'
 
 const TOPOLOGY_LAYOUT_STORAGE_KEY = 'alloy.topology.case39.layout.v1'
 const VIEWBOX_WIDTH = 920

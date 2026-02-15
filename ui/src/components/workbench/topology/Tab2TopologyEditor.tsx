@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import './Tab2TopologyEditor.css'
 
+import type { TopologySelectionState } from '../types'
 import { TopologySpecListPanel } from './TopologySpecListPanel'
-import { EMPTY_TOPOLOGY_SELECTION, useTopologyGraphData } from './hooks/useTopologyGraphData'
 import { useTopologyCanvasInteraction } from './hooks/useTopologyCanvasInteraction'
-import type { TopologySelectionState } from './types'
+import { EMPTY_TOPOLOGY_SELECTION, useTopologyGraphData } from './hooks/useTopologyGraphData'
 
 type Tab2TopologyEditorProps = {
   selection: TopologySelectionState

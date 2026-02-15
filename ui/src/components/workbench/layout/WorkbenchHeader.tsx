@@ -1,4 +1,4 @@
-import type { TabKey, ThemeMode } from './types'
+import type { TabKey, ThemeMode } from '../types'
 
 type WorkbenchHeaderProps = {
   activeTab: TabKey

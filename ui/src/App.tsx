@@ -3,15 +3,15 @@ import { Group, Panel, Separator } from 'react-resizable-panels'
 import 'xterm/css/xterm.css'
 import './App.css'
 
-import { WORKBENCH_CARD_DEFINITIONS } from './components/workbench/cardDefinitions'
+import { WORKBENCH_CARD_DEFINITIONS } from './components/workbench/cards/cardDefinitions'
+import { useCardDrag } from './components/workbench/cards/hooks/useCardDrag'
+import { MockChatPanel } from './components/workbench/chat-terminal/MockChatPanel'
+import { TerminalPanel } from './components/workbench/chat-terminal/TerminalPanel'
 import { DEFAULT_TOPOLOGY_SELECTION, PANDAPOWER_BASECASES } from './components/workbench/constants'
-import { useCardDrag } from './components/workbench/hooks/useCardDrag'
-import { MockChatPanel } from './components/workbench/MockChatPanel'
-import { Tab2TopologyEditor } from './components/workbench/Tab2TopologyEditor'
-import { TerminalPanel } from './components/workbench/TerminalPanel'
+import { WorkbenchCanvasPanel } from './components/workbench/layout/WorkbenchCanvasPanel'
+import { WorkbenchHeader } from './components/workbench/layout/WorkbenchHeader'
+import { Tab2TopologyEditor } from './components/workbench/topology/Tab2TopologyEditor'
 import type { Point, ScaleSamplingMode, TabKey, ThemeMode, TopologySelectionState } from './components/workbench/types'
-import { WorkbenchCanvasPanel } from './components/workbench/WorkbenchCanvasPanel'
-import { WorkbenchHeader } from './components/workbench/WorkbenchHeader'
 
 /**
  * Root workbench application shell.
