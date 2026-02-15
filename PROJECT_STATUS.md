@@ -163,6 +163,11 @@ $$
 - 2026-02-14: Added generic re-evaluation command `python -m alloy.experiments.reevaluate_benchmark --run-dir <path> --train-entrypoint <module:function>`; legacy `reevaluate_run` now delegates to it.
 - 2026-02-14: Added generic benchmark execution command `python -m alloy.experiments.run_benchmark --config <json> --train-entrypoint <module:function>` with optional `--run-dir` and `--epochs` overrides.
 - 2026-02-14: Extracted case39 assembly into `alloy/benchmarks/presets/case39.py`; `train_case39.py` is now a thin preset wrapper over generic supervised runner.
+- 2026-02-15: Started sample-generation backend generalization by adding pluggable topology provider interface (`case39_single` default) and threading provider selection through case39 dataset builder config/CLI.
+- 2026-02-15: Upgraded topology provider to spec-driven mode (`spec_driven`) supporting frontend-style line outage objects (`from_bus`, `to_bus`), topology sampling modes, and JSON-configurable topology spec transport through dataset builder workers.
+- 2026-02-15: Implemented minimal topology GUI loop: FastAPI endpoints for case39 line options and topology-spec validation, static Topology tab page, and runnable server entrypoint (`python -m alloy.experiments.run_topology_gui`).
+- 2026-02-15: Fixed dataset materialization to persist real sampled `topology_id` values instead of hardcoded `"N"` in chunk outputs.
+- 2026-02-15: Added React workbench shell (`ui/`) with Tab1/Tab2 structure, center canvas placeholder, right mock LLM chat panel, and bottom xterm terminal panel using resizable panes.
 
 ### Multi-Layer Configuration
 ```

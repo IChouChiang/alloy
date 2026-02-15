@@ -1,0 +1,178 @@
+.app-root {
+  width: 100%;
+  height: 100%;
+  background: #0b1220;
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tabs-header {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #243247;
+  padding: 10px;
+  background: #111b2f;
+}
+
+.tab-btn {
+  border: 1px solid #334766;
+  background: #1a2740;
+  color: #c7d2fe;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background: #2d4269;
+  border-color: #4c6aa4;
+  color: #f8fafc;
+}
+
+.workbench-main {
+  flex: 1;
+  min-height: 0;
+  padding: 10px;
+}
+
+.panel-shell {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #22314a;
+  border-radius: 10px;
+  background: #0f1728;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.panel-title {
+  padding: 10px 12px;
+  border-bottom: 1px solid #22314a;
+  font-size: 14px;
+  color: #cdd8f5;
+}
+
+.resize-handle {
+  background: transparent;
+  position: relative;
+}
+
+.resize-handle.vertical {
+  width: 8px;
+}
+
+.resize-handle.horizontal {
+  height: 8px;
+}
+
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 999px;
+  background: #2d3e5f;
+}
+
+.canvas-shell {
+  padding-bottom: 10px;
+}
+
+.canvas-placeholder {
+  flex: 1;
+  margin: 12px;
+  border: 1px dashed #33527f;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #9fb2d8;
+}
+
+.canvas-box {
+  border: 1px solid #48689e;
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: #12243f;
+}
+
+.chat-history {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-msg {
+  border: 1px solid #2a3a55;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.chat-user {
+  background: #1d3358;
+}
+
+.chat-assistant {
+  background: #1b2436;
+}
+
+.chat-role {
+  font-size: 11px;
+  color: #9cb2e4;
+}
+
+.chat-input-row {
+  padding: 10px;
+  border-top: 1px solid #22314a;
+  display: flex;
+  gap: 8px;
+}
+
+.chat-input-row input {
+  flex: 1;
+  min-width: 0;
+  background: #091021;
+  border: 1px solid #344e78;
+  color: #e2e8f0;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.chat-input-row button {
+  background: #2d4c8a;
+  border: 1px solid #4a6bad;
+  color: #eef3ff;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.terminal-shell {
+  overflow: hidden;
+}
+
+.terminal-host {
+  flex: 1;
+  min-height: 0;
+  padding: 8px;
+}
+
+.terminal-host .xterm {
+  height: 100%;
+}
+
+.tab2-shell {
+  padding: 12px;
+  justify-content: center;
+  align-items: center;
+}
