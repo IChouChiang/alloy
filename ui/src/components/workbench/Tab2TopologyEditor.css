@@ -150,6 +150,12 @@
 	stroke-dasharray: none;
 }
 
+.topology-line.focused {
+	stroke: #f59e0b;
+	stroke-width: 3;
+	stroke-dasharray: 2 2;
+}
+
 .topology-line-hit {
 	stroke: transparent;
 	stroke-width: 12;
@@ -210,6 +216,17 @@
 	margin: 4px 0;
 }
 
+.topology-summary-hint {
+	font-size: 11px;
+	color: var(--chat-role-text);
+}
+
+.topology-side-batch {
+	padding: 8px 12px 0;
+	display: flex;
+	gap: 8px;
+}
+
 .topology-spec-list {
 	flex: 1;
 	min-height: 0;
@@ -234,6 +251,11 @@
 	background: var(--tab-bg);
 }
 
+.topology-spec-item.active {
+	border-color: var(--tab-active-border);
+	background: var(--tab-active-bg);
+}
+
 .topology-spec-note {
 	font-size: 11px;
 	color: var(--chat-role-text);
@@ -247,6 +269,22 @@
 	border-radius: 6px;
 	padding: 5px 6px;
 	font-size: 12px;
+}
+
+.topology-spec-controls {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.topology-remove-btn {
+	border: 1px solid var(--input-border);
+	background: var(--panel-bg);
+	color: var(--input-text);
+	border-radius: 6px;
+	padding: 5px 8px;
+	font-size: 12px;
+	cursor: pointer;
 }
 
 .topology-chip {

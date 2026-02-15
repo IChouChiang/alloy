@@ -53,6 +53,7 @@ export function Tab2Placeholder({
   const [graphOffset, setGraphOffset] = useState({ x: 0, y: 0 })
   const [isGraphPanning, setIsGraphPanning] = useState(false)
   const [draggingBusId, setDraggingBusId] = useState<number | null>(null)
+  const [focusedTopologyId, setFocusedTopologyId] = useState<string | null>(null)
   const [busPositions, setBusPositions] = useState<Record<number, { x: number; y: number }>>({})
   const [selectedLineIds, setSelectedLineIds] = useState<Set<number>>(new Set())
   const [splitGroupByTopologyId, setSplitGroupByTopologyId] = useState<Record<string, TopologySplitGroup>>({})
@@ -255,6 +256,14 @@ export function Tab2Placeholder({
     return lines
   }, [lineById, selectedLineIds])
 
+  const focusedLineIdx = useMemo(() => {
+    if (!focusedTopologyId || focusedTopologyId === 'N') {
+      return null
+    }
+    const parsed = Number(focusedTopologyId.split('_')[1])
+    return Number.isFinite(parsed) ? parsed : null
+  }, [focusedTopologyId])
+
   const generatedSpecs = useMemo<TopologySpec[]>(() => {
     const specs: TopologySpec[] = [{ topology_id: 'N', line_outages: [] }]
     for (const line of selectedLines) {
@@ -286,6 +295,10 @@ export function Tab2Placeholder({
       unseenTopologyIds: unseen,
     }
   }, [generatedSpecs, splitGroupByTopologyId])
+
+  const selectedSpecs = useMemo(() => {
+    return assignment.specs.filter((spec) => spec.topology_id !== 'N')
+  }, [assignment.specs])
 
   const busPositionById = useMemo(() => {
     const positions = new Map<number, { x: number; y: number }>()
@@ -518,6 +531,37 @@ export function Tab2Placeholder({
     }))
   }
 
+  const assignAllTopologies = (group: TopologySplitGroup) => {
+    const next: Record<string, TopologySplitGroup> = {}
+    for (const spec of selectedSpecs) {
+      next[spec.topology_id] = group
+    }
+    setSplitGroupByTopologyId(next)
+    setStatus(`Assigned ${selectedSpecs.length} N-1 topologies to ${group}.`)
+  }
+
+  const removeTopologySpec = (topologyId: string) => {
+    const parsed = Number(topologyId.split('_')[1])
+    if (!Number.isFinite(parsed)) {
+      return
+    }
+    const lineIdx = parsed
+    setSelectedLineIds((prev) => {
+      const next = new Set(prev)
+      next.delete(lineIdx)
+      return next
+    })
+    setSplitGroupByTopologyId((prev) => {
+      const next = { ...prev }
+      delete next[topologyId]
+      return next
+    })
+    if (focusedTopologyId === topologyId) {
+      setFocusedTopologyId(null)
+    }
+    setStatus(`Removed ${topologyId} from topology set.`)
+  }
+
   const validateCurrent = async () => {
     try {
       setStatus('Validating topology specs...')
@@ -592,6 +636,7 @@ export function Tab2Placeholder({
                   return null
                 }
                 const selected = edge.line_idx != null && selectedLineIds.has(edge.line_idx)
+                const focused = edge.line_idx != null && focusedLineIdx === edge.line_idx
                 const isSelectable = edge.kind === 'line' && edge.line_idx != null
                 return (
                   <g key={edge.edge_id}>
@@ -600,7 +645,7 @@ export function Tab2Placeholder({
                       y1={from.y}
                       x2={to.x}
                       y2={to.y}
-                      className={`topology-line ${edge.kind}${selected ? ' selected' : ''}`}
+                      className={`topology-line ${edge.kind}${selected ? ' selected' : ''}${focused ? ' focused' : ''}`}
                     />
                     {isSelectable ? (
                       <line
@@ -669,6 +714,16 @@ export function Tab2Placeholder({
             <p>Total topologies: <strong>{assignment.specs.length}</strong></p>
             <p>Seen: <strong>{assignment.seenTopologyIds.length}</strong></p>
             <p>Unseen: <strong>{assignment.unseenTopologyIds.length}</strong></p>
+            <p className="topology-summary-hint">Hover card to highlight line; click remove to drop one outage.</p>
+          </div>
+
+          <div className="topology-side-batch">
+            <button className="topology-btn" type="button" onClick={() => assignAllTopologies('seen')} disabled={selectedSpecs.length === 0}>
+              All seen
+            </button>
+            <button className="topology-btn" type="button" onClick={() => assignAllTopologies('unseen')} disabled={selectedSpecs.length === 0}>
+              All unseen
+            </button>
           </div>
 
           <div className="topology-spec-list">
@@ -680,21 +735,31 @@ export function Tab2Placeholder({
               <span className="topology-chip">seen</span>
             </div>
 
-            {assignment.specs.filter((spec) => spec.topology_id !== 'N').map((spec) => (
-              <div key={spec.topology_id} className="topology-spec-item">
+            {selectedSpecs.map((spec) => (
+              <div
+                key={spec.topology_id}
+                className={`topology-spec-item${focusedTopologyId === spec.topology_id ? ' active' : ''}`}
+                onMouseEnter={() => setFocusedTopologyId(spec.topology_id)}
+                onMouseLeave={() => setFocusedTopologyId(null)}
+              >
                 <div>
                   <strong>{spec.topology_id}</strong>
                   <div className="topology-spec-note">
                     outage ({spec.line_outages[0]?.from_bus}, {spec.line_outages[0]?.to_bus})
                   </div>
                 </div>
-                <select
-                  value={splitGroupByTopologyId[spec.topology_id] ?? 'seen'}
-                  onChange={(event) => handleSplitGroupChange(spec.topology_id, event.target.value as TopologySplitGroup)}
-                >
-                  <option value="seen">seen</option>
-                  <option value="unseen">unseen</option>
-                </select>
+                <div className="topology-spec-controls">
+                  <select
+                    value={splitGroupByTopologyId[spec.topology_id] ?? 'seen'}
+                    onChange={(event) => handleSplitGroupChange(spec.topology_id, event.target.value as TopologySplitGroup)}
+                  >
+                    <option value="seen">seen</option>
+                    <option value="unseen">unseen</option>
+                  </select>
+                  <button className="topology-remove-btn" type="button" onClick={() => removeTopologySpec(spec.topology_id)}>
+                    Remove
+                  </button>
+                </div>
               </div>
             ))}
           </div>

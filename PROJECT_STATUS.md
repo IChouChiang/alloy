@@ -188,6 +188,7 @@ $$
 - 2026-02-15: Improved Tab2 topology UX with backend-fallback diagnostics, full visual edge rendering (line + transformer), larger selectable line hit areas, and dedicated graph zoom controls (`+/-/100%`).
 - 2026-02-15: Started Phase 2 backend topology split support by adding split-level seen/unseen topology-spec configuration in dataset builder with per-split provider resolution and metadata persistence (`split_topology`).
 - 2026-02-15: Decoupled Tab2 topology editor styles into component-scoped stylesheet (`ui/src/components/workbench/Tab2TopologyEditor.css`) and added graph pan + bus drag + fit/reset layout with local layout persistence.
+- 2026-02-15: Enhanced Tab2 topology side card with bulk split assignment (`All seen`/`All unseen`), per-topology removal, and list-to-graph hover focus highlighting for faster topology curation.
 
 ### Multi-Layer Configuration
 ```
