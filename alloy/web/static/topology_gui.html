@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alloy Topology Selection</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      .tabs {
+        display: flex;
+        gap: 8px;
+        padding: 12px;
+        border-bottom: 1px solid #334155;
+      }
+      .tab {
+        padding: 8px 12px;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        background: #1e293b;
+        color: #e2e8f0;
+        cursor: pointer;
+      }
+      .tab.active {
+        background: #334155;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        padding: 12px;
+      }
+      .panel {
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 12px;
+        background: #111827;
+        min-height: 420px;
+      }
+      .line-list {
+        max-height: 360px;
+        overflow: auto;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 8px;
+      }
+      .line-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      button {
+        padding: 8px 10px;
+        border-radius: 6px;
+        border: 1px solid #475569;
+        background: #1d4ed8;
+        color: #fff;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #334155;
+      }
+      textarea {
+        width: 100%;
+        min-height: 340px;
+        background: #020617;
+        color: #e2e8f0;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      .status {
+        margin-top: 8px;
+        color: #93c5fd;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tabs">
+      <button class="tab active" id="tab-topology">Topology Selection</button>
+      <button class="tab" id="tab-placeholder">Main Canvas (Placeholder)</button>
+    </div>
+
+    <div id="view-topology" class="layout">
+      <div class="panel">
+        <h3>Case39 Line Outage Selector</h3>
+        <p>Select lines to create one N-1 topology per selected line.</p>
+        <div class="line-list" id="line-list"></div>
+        <div class="actions">
+          <button id="build-specs">Build Specs JSON</button>
+          <button class="secondary" id="validate-specs">Validate via API</button>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+      <div class="panel">
+        <h3>Topology Specs JSON</h3>
+        <textarea id="specs-json"></textarea>
+      </div>
+    </div>
+
+    <div id="view-placeholder" class="layout hidden">
+      <div class="panel">
+        <h3>Main Canvas Placeholder</h3>
+        <p>This tab is reserved for the future low-code pipeline canvas.</p>
+      </div>
+    </div>
+
+    <script>
+      const tabTopology = document.getElementById('tab-topology');
+      const tabPlaceholder = document.getElementById('tab-placeholder');
+      const viewTopology = document.getElementById('view-topology');
+      const viewPlaceholder = document.getElementById('view-placeholder');
+      const lineList = document.getElementById('line-list');
+      const specsJson = document.getElementById('specs-json');
+      const status = document.getElementById('status');
+      const buildSpecsBtn = document.getElementById('build-specs');
+      const validateSpecsBtn = document.getElementById('validate-specs');
+
+      function setTab(tab) {
+        const topologyActive = tab === 'topology';
+        tabTopology.classList.toggle('active', topologyActive);
+        tabPlaceholder.classList.toggle('active', !topologyActive);
+        viewTopology.classList.toggle('hidden', !topologyActive);
+        viewPlaceholder.classList.toggle('hidden', topologyActive);
+      }
+
+      tabTopology.addEventListener('click', () => setTab('topology'));
+      tabPlaceholder.addEventListener('click', () => setTab('placeholder'));
+
+      async function loadLines() {
+        status.textContent = 'Loading lines...';
+        const resp = await fetch('/api/topology/case39/lines');
+        if (!resp.ok) {
+          throw new Error('Failed to load line options.');
+        }
+        const lines = await resp.json();
+        lineList.innerHTML = '';
+        for (const line of lines) {
+          const row = document.createElement('label');
+          row.className = 'line-item';
+          row.innerHTML = `
+            <input type="checkbox" data-from="${line.from_bus}" data-to="${line.to_bus}" />
+            <span>${line.name}</span>
+          `;
+          lineList.appendChild(row);
+        }
+        status.textContent = `Loaded ${lines.length} lines.`;
+      }
+
+      function buildSpecsFromSelection() {
+        const checkboxes = lineList.querySelectorAll('input[type="checkbox"]:checked');
+        const specs = [{ topology_id: 'N', line_outages: [] }];
+        let counter = 1;
+        for (const box of checkboxes) {
+          const fromBus = Number(box.dataset.from);
+          const toBus = Number(box.dataset.to);
+          specs.push({
+            topology_id: `N-1_${counter}_${fromBus}_${toBus}`,
+            line_outages: [{ from_bus: fromBus, to_bus: toBus }],
+          });
+          counter += 1;
+        }
+        specsJson.value = JSON.stringify(specs, null, 2);
+        status.textContent = `Built ${specs.length} topology specs (${specs.length - 1} outages).`;
+      }
+
+      async function validateSpecs() {
+        let payload;
+        try {
+          payload = JSON.parse(specsJson.value || '[]');
+        } catch (err) {
+          status.textContent = `Invalid JSON: ${err}`;
+          return;
+        }
+
+        const resp = await fetch('/api/topology/specs/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topology_specs: payload }),
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json();
+          status.textContent = `Validation failed: ${err.detail || resp.statusText}`;
+          return;
+        }
+
+        const data = await resp.json();
+        specsJson.value = JSON.stringify(data.normalized_topology_specs, null, 2);
+        status.textContent = data.message;
+      }
+
+      buildSpecsBtn.addEventListener('click', buildSpecsFromSelection);
+      validateSpecsBtn.addEventListener('click', validateSpecs);
+
+      loadLines().catch((err) => {
+        status.textContent = String(err);
+      });
+    </script>
+  </body>
+</html>

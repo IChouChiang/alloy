@@ -13,6 +13,8 @@ dependencies = [
     "pandas>=1.3",
     "torch>=2.0",
     "pandapower>=2.10",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
 ]
 
 [tool.setuptools]
