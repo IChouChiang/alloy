@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import 'xterm/css/xterm.css'
 import './App.css'
 
 import { WORKBENCH_CARD_DEFINITIONS } from './components/workbench/cardDefinitions'
 import { DEFAULT_TOPOLOGY_SELECTION, PANDAPOWER_BASECASES } from './components/workbench/constants'
+import { useCardDrag } from './components/workbench/hooks/useCardDrag'
 import { MockChatPanel } from './components/workbench/MockChatPanel'
 import { Tab2Placeholder } from './components/workbench/Tab2Placeholder'
 import { TerminalPanel } from './components/workbench/TerminalPanel'
@@ -43,20 +44,6 @@ function App() {
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const baselineRef = useRef<HTMLDivElement | null>(null)
   const loadConfigRef = useRef<HTMLDivElement | null>(null)
-  const dragState = useRef<{ isDragging: boolean; offsetX: number; offsetY: number }>({
-    isDragging: false,
-    offsetX: 0,
-    offsetY: 0,
-  })
-  const loadCardDragState = useRef<{ isDragging: boolean; offsetX: number; offsetY: number }>({
-    isDragging: false,
-    offsetX: 0,
-    offsetY: 0,
-  })
-  const [cardPos, setCardPos] = useState<Point>({ x: 24, y: 24 })
-  const [loadCardPos, setLoadCardPos] = useState<Point>({ x: 320, y: 24 })
-  const [isDragging, setIsDragging] = useState(false)
-  const [isLoadCardDragging, setIsLoadCardDragging] = useState(false)
   const [isCanvasPanning, setIsCanvasPanning] = useState(false)
   const canvasPanState = useRef<{ isPanning: boolean; pointerId: number | null; startX: number; startY: number; startOffsetX: number; startOffsetY: number }>({
     isPanning: false,
@@ -67,56 +54,32 @@ function App() {
     startOffsetY: 0,
   })
 
-  const baselineHeight = baselineRef.current?.offsetHeight ?? 156
-  const loadHeight = loadConfigRef.current?.offsetHeight ?? 292
-
   /** Clamps a zoom value to the configured min/max range. */
   const clampZoom = useCallback((value: number) => {
     return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value))
   }, [MAX_ZOOM, MIN_ZOOM])
 
-  /** Moves the baseline card while dragging, converting screen to canvas coordinates. */
-  const handlePointerMove = useCallback((event: PointerEvent) => {
-    if (!dragState.current.isDragging || !canvasRef.current) {
-      return
-    }
-    const containerRect = canvasRef.current.getBoundingClientRect()
-    const proposedX =
-      (event.clientX - containerRect.left - canvasOffset.x) / canvasZoom - dragState.current.offsetX
-    const proposedY =
-      (event.clientY - containerRect.top - canvasOffset.y) / canvasZoom - dragState.current.offsetY
-    setCardPos({
-      x: proposedX,
-      y: proposedY,
-    })
-  }, [canvasOffset.x, canvasOffset.y, canvasZoom])
+  const baselineDrag = useCardDrag({
+    canvasRef,
+    cardRef: baselineRef,
+    canvasZoom,
+    canvasOffset,
+    initialPosition: { x: 24, y: 24 },
+  })
+  const loadDrag = useCardDrag({
+    canvasRef,
+    cardRef: loadConfigRef,
+    canvasZoom,
+    canvasOffset,
+    initialPosition: { x: 320, y: 24 },
+  })
 
-  /** Finalizes baseline card drag and removes temporary global listeners. */
-  const handlePointerUp = useCallback(() => {
-    if (!dragState.current.isDragging) {
-      return
-    }
-    dragState.current.isDragging = false
-    setIsDragging(false)
-    window.removeEventListener('pointermove', handlePointerMove)
-    window.removeEventListener('pointerup', handlePointerUp)
-  }, [handlePointerMove])
-
-  /** Moves the load-config card while dragging, converting screen to canvas coordinates. */
-  const handleLoadCardPointerMove = useCallback((event: PointerEvent) => {
-    if (!loadCardDragState.current.isDragging || !canvasRef.current) {
-      return
-    }
-    const containerRect = canvasRef.current.getBoundingClientRect()
-    const proposedX =
-      (event.clientX - containerRect.left - canvasOffset.x) / canvasZoom - loadCardDragState.current.offsetX
-    const proposedY =
-      (event.clientY - containerRect.top - canvasOffset.y) / canvasZoom - loadCardDragState.current.offsetY
-    setLoadCardPos({
-      x: proposedX,
-      y: proposedY,
-    })
-  }, [canvasOffset.x, canvasOffset.y, canvasZoom])
+  const cardPos = baselineDrag.position
+  const loadCardPos = loadDrag.position
+  const isDragging = baselineDrag.isDragging
+  const isLoadCardDragging = loadDrag.isDragging
+  const baselineHeight = baselineRef.current?.offsetHeight ?? 156
+  const loadHeight = loadConfigRef.current?.offsetHeight ?? 292
 
   /** Updates canvas offset during blank-area panning with pointer capture. */
   const handleCanvasPanPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -144,46 +107,7 @@ function App() {
     setIsCanvasPanning(false)
   }
 
-  /** Finalizes load-config card drag and removes temporary global listeners. */
-  const handleLoadCardPointerUp = useCallback(() => {
-    if (!loadCardDragState.current.isDragging) {
-      return
-    }
-    loadCardDragState.current.isDragging = false
-    setIsLoadCardDragging(false)
-    window.removeEventListener('pointermove', handleLoadCardPointerMove)
-    window.removeEventListener('pointerup', handleLoadCardPointerUp)
-  }, [handleLoadCardPointerMove])
-
-  /** Cleans up transient pointer listeners on unmount or callback change. */
-  useEffect(() => {
-    return () => {
-      window.removeEventListener('pointermove', handlePointerMove)
-      window.removeEventListener('pointerup', handlePointerUp)
-      window.removeEventListener('pointermove', handleLoadCardPointerMove)
-      window.removeEventListener('pointerup', handleLoadCardPointerUp)
-    }
-  }, [
-    handlePointerMove,
-    handlePointerUp,
-    handleLoadCardPointerMove,
-    handleLoadCardPointerUp,
-  ])
-
-  /** Starts baseline card dragging and stores pointer-to-card offset. */
-  const handleDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!canvasRef.current || !baselineRef.current) {
-      return
-    }
-    event.preventDefault()
-    const cardRect = baselineRef.current.getBoundingClientRect()
-    dragState.current.isDragging = true
-    setIsDragging(true)
-    dragState.current.offsetX = (event.clientX - cardRect.left) / canvasZoom
-    dragState.current.offsetY = (event.clientY - cardRect.top) / canvasZoom
-    window.addEventListener('pointermove', handlePointerMove)
-    window.addEventListener('pointerup', handlePointerUp)
-  }
+  const handleDragStart = baselineDrag.startDrag
 
   /** Returns whether a pointer-down target should initiate card dragging. */
   const shouldStartCardDrag = (event: React.PointerEvent<HTMLElement>) => {
@@ -209,20 +133,7 @@ function App() {
     handleDragStart(event)
   }
 
-  /** Starts load-config card dragging and stores pointer-to-card offset. */
-  const handleLoadCardDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!canvasRef.current || !loadConfigRef.current) {
-      return
-    }
-    event.preventDefault()
-    const cardRect = loadConfigRef.current.getBoundingClientRect()
-    loadCardDragState.current.isDragging = true
-    setIsLoadCardDragging(true)
-    loadCardDragState.current.offsetX = (event.clientX - cardRect.left) / canvasZoom
-    loadCardDragState.current.offsetY = (event.clientY - cardRect.top) / canvasZoom
-    window.addEventListener('pointermove', handleLoadCardPointerMove)
-    window.addEventListener('pointerup', handleLoadCardPointerUp)
-  }
+  const handleLoadCardDragStart = loadDrag.startDrag
 
   /** Starts load-config drag when pointer-down happens on blank card area. */
   const handleLoadCardPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
