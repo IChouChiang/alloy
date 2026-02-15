@@ -1,24 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
-import { Terminal } from 'xterm'
-import { FitAddon } from 'xterm-addon-fit'
 import 'xterm/css/xterm.css'
 import './App.css'
 
-type TabKey = 'tab1' | 'tab2'
-type ThemeMode = 'light' | 'dark'
-
-type ChatMessage = {
-  role: 'user' | 'assistant'
-  text: string
-}
-
-type Point = {
-  x: number
-  y: number
-}
-
-type ScaleSamplingMode = 'truncated_normal' | 'uniform_bins' | 'bounded_uniform'
+import { CanvasToolbar } from './components/workbench/CanvasToolbar'
+import { CaseSelectCard } from './components/workbench/CaseSelectCard'
+import { LoadConfigCard } from './components/workbench/LoadConfigCard'
+import { MockChatPanel } from './components/workbench/MockChatPanel'
+import { Tab2Placeholder } from './components/workbench/Tab2Placeholder'
+import { TerminalPanel } from './components/workbench/TerminalPanel'
+import type { Point, ScaleSamplingMode, TabKey, ThemeMode } from './components/workbench/types'
 
 const PANDAPOWER_BASECASES = [
   'case4gs',
@@ -48,127 +39,6 @@ const PANDAPOWER_BASECASES = [
   'case6515rte',
   'case9241pegase',
 ] as const
-
-function LockIcon({ locked }: { locked: boolean }) {
-  if (locked) {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="lock-icon">
-        <path d="M7 10V8a5 5 0 1 1 10 0v2h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h1Zm2 0h6V8a3 3 0 1 0-6 0v2Z" />
-      </svg>
-    )
-  }
-
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="lock-icon">
-      <path d="M17 10h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h9V8a3 3 0 1 0-6 0 1 1 0 0 1-2 0 5 5 0 1 1 10 0v2Z" />
-    </svg>
-  )
-}
-
-function MockChatPanel() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'assistant', text: 'Mock assistant ready. This panel is reserved for LLM integration.' },
-  ])
-  const [input, setInput] = useState('')
-
-  const sendMessage = () => {
-    const text = input.trim()
-    if (!text) {
-      return
-    }
-    setMessages((prev) => [...prev, { role: 'user', text }])
-    setInput('')
-    window.setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', text: `Mock reply: received "${text}".` },
-      ])
-    }, 450)
-  }
-
-  return (
-    <div className="panel-shell">
-      <div className="panel-title">LLM Chat (Mock)</div>
-      <div className="chat-history">
-        {messages.map((msg, idx) => (
-          <div key={`${msg.role}-${idx}`} className={`chat-msg chat-${msg.role}`}>
-            <span className="chat-role">{msg.role === 'user' ? 'You' : 'Assistant'}</span>
-            <span>{msg.text}</span>
-          </div>
-        ))}
-      </div>
-      <div className="chat-input-row">
-        <input
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          placeholder="Type message..."
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              sendMessage()
-            }
-          }}
-        />
-        <button onClick={sendMessage}>Send</button>
-      </div>
-    </div>
-  )
-}
-
-function TerminalPanel({ themeMode }: { themeMode: ThemeMode }) {
-  const hostRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    if (!hostRef.current) {
-      return
-    }
-
-    const isDark = themeMode === 'dark'
-    const terminal = new Terminal({
-      convertEol: true,
-      cursorBlink: true,
-      theme: {
-        background: isDark ? '#05070d' : '#f8fafc',
-        foreground: isDark ? '#d4d8e8' : '#1f2937',
-      },
-      fontSize: 13,
-    })
-    const fitAddon = new FitAddon()
-    terminal.loadAddon(fitAddon)
-    terminal.open(hostRef.current)
-    fitAddon.fit()
-
-    terminal.writeln('[alloy-ui] terminal panel initialized.')
-    terminal.writeln('[alloy-ui] waiting for backend task logs...')
-
-    let tick = 1
-    const timer = window.setInterval(() => {
-      terminal.writeln(`[mock-log] heartbeat ${tick} | tab1 shell running`)
-      tick += 1
-      if (tick > 3) {
-        terminal.writeln('[mock-log] heartbeat completed (3/3), stopping stream.')
-        window.clearInterval(timer)
-      }
-    }, 1400)
-
-    const resizeObserver = new ResizeObserver(() => {
-      fitAddon.fit()
-    })
-    resizeObserver.observe(hostRef.current)
-
-    return () => {
-      window.clearInterval(timer)
-      resizeObserver.disconnect()
-      terminal.dispose()
-    }
-  }, [themeMode])
-
-  return (
-    <div className="panel-shell terminal-shell">
-      <div className="panel-title">Terminal (xterm mock stream)</div>
-      <div className="terminal-host" ref={hostRef} />
-    </div>
-  )
-}
 
 function App() {
   const MIN_ZOOM = 0.5
@@ -478,226 +348,60 @@ function App() {
                       onPointerUp={handleCanvasPanPointerUp}
                       onPointerCancel={handleCanvasPanPointerUp}
                     >
-                      <div className="canvas-toolbar">
-                        <button className="zoom-btn" onClick={zoomOut} type="button" aria-label="Zoom out">-</button>
-                        <span className="zoom-text">{Math.round(canvasZoom * 100)}%</span>
-                        <button className="zoom-btn" onClick={zoomIn} type="button" aria-label="Zoom in">+</button>
-                        <button className="zoom-btn zoom-center" onClick={centerAt100} type="button" aria-label="Center at 100%">100%</button>
-                      </div>
+                      <CanvasToolbar
+                        zoomPercent={Math.round(canvasZoom * 100)}
+                        onZoomOut={zoomOut}
+                        onZoomIn={zoomIn}
+                        onCenterAt100={centerAt100}
+                      />
                       <div
                         className="canvas-content"
                         style={{ transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${canvasZoom})` }}
                       >
-                      <svg className="canvas-links" aria-hidden="true">
-                        <line
-                          x1={baselineOutputPort.x}
-                          y1={baselineOutputPort.y}
-                          x2={loadInputPort.x}
-                          y2={loadInputPort.y}
-                          className="canvas-link-line"
+                        <svg className="canvas-links" aria-hidden="true">
+                          <line
+                            x1={baselineOutputPort.x}
+                            y1={baselineOutputPort.y}
+                            x2={loadInputPort.x}
+                            y2={loadInputPort.y}
+                            className="canvas-link-line"
+                          />
+                        </svg>
+                        <CaseSelectCard
+                          position={cardPos}
+                          isDragging={isDragging}
+                          cardRef={baselineRef}
+                          selectedBasecase={selectedBasecase}
+                          isLocked={isBasecaseLocked}
+                          basecases={PANDAPOWER_BASECASES}
+                          onCardPointerDown={handleBaselineCardPointerDown}
+                          onHeaderPointerDown={handleDragStart}
+                          onToggleLock={() => setIsBasecaseLocked((prev) => !prev)}
+                          onChangeBasecase={setSelectedBasecase}
                         />
-                      </svg>
-                      <div
-                        className={`baseline-card${isDragging ? ' dragging' : ''}`}
-                        ref={baselineRef}
-                        style={{ left: `${cardPos.x}px`, top: `${cardPos.y}px` }}
-                        onPointerDown={handleBaselineCardPointerDown}
-                      >
-                        <div className={`baseline-header card-drag-handle${isDragging ? ' dragging' : ''}`} onPointerDown={handleDragStart}>
-                          <span className="baseline-title">Baseline</span>
-                          <button
-                            type="button"
-                            className={`baseline-lock-btn${isBasecaseLocked ? ' locked' : ''}`}
-                            onClick={() => setIsBasecaseLocked((prev) => !prev)}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onMouseDown={(event) => event.stopPropagation()}
-                            title={isBasecaseLocked ? 'Unlock configuration' : 'Lock configuration'}
-                            aria-label={isBasecaseLocked ? 'Unlock configuration' : 'Lock configuration'}
-                          >
-                            <LockIcon locked={isBasecaseLocked} />
-                            <span>{isBasecaseLocked ? 'Locked' : 'Unlocked'}</span>
-                          </button>
-                        </div>
-                        <div className="baseline-row">
-                          <label className="baseline-label" htmlFor="basecase-select">Base case</label>
-                          <select
-                            id="basecase-select"
-                            className="baseline-select"
-                            value={selectedBasecase}
-                            disabled={isBasecaseLocked}
-                            onChange={(event) => setSelectedBasecase(event.target.value)}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onMouseDown={(event) => event.stopPropagation()}
-                          >
-                            {PANDAPOWER_BASECASES.map((basecase) => (
-                              <option key={basecase} value={basecase}>
-                                {basecase}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <p className="baseline-note">
-                          {isBasecaseLocked
-                            ? 'Basecase selection is locked to prevent accidental edits.'
-                            : 'Basecase selection is unlocked for editing.'}
-                        </p>
-                        <span className="card-port card-port-output" title="Output: basecase context" />
-                      </div>
-                      <div
-                        className={`load-config-card${isLoadCardDragging ? ' dragging' : ''}`}
-                        ref={loadConfigRef}
-                        style={{ left: `${loadCardPos.x}px`, top: `${loadCardPos.y}px` }}
-                        onPointerDown={handleLoadCardPointerDown}
-                      >
-                        <div
-                          className={`baseline-header card-drag-handle${isLoadCardDragging ? ' dragging' : ''}`}
-                          onPointerDown={handleLoadCardDragStart}
-                        >
-                          <span className="baseline-title">Load Config</span>
-                          <button
-                            type="button"
-                            className={`baseline-lock-btn${isLoadConfigLocked ? ' locked' : ''}`}
-                            onClick={() => setIsLoadConfigLocked((prev) => !prev)}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onMouseDown={(event) => event.stopPropagation()}
-                            title={isLoadConfigLocked ? 'Unlock configuration' : 'Lock configuration'}
-                            aria-label={isLoadConfigLocked ? 'Unlock configuration' : 'Lock configuration'}
-                          >
-                            <LockIcon locked={isLoadConfigLocked} />
-                            <span>{isLoadConfigLocked ? 'Locked' : 'Unlocked'}</span>
-                          </button>
-                        </div>
-
-                        <div className="load-config-grid">
-                          <span className="load-section-title">Bounds</span>
-                          <span className="load-section-spacer" />
-
-                          <label className="baseline-label" htmlFor="global-scale-min">Lower bound (g_min)</label>
-                          <input
-                            id="global-scale-min"
-                            className="load-input"
-                            type="number"
-                            step="0.01"
-                            value={globalScaleMin}
-                            disabled={isLoadConfigLocked}
-                            onChange={(event) => setGlobalScaleMin(Number(event.target.value))}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onMouseDown={(event) => event.stopPropagation()}
-                          />
-
-                          <label className="baseline-label" htmlFor="global-scale-max">Upper bound (g_max)</label>
-                          <input
-                            id="global-scale-max"
-                            className="load-input"
-                            type="number"
-                            step="0.01"
-                            value={globalScaleMax}
-                            disabled={isLoadConfigLocked}
-                            onChange={(event) => setGlobalScaleMax(Number(event.target.value))}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onMouseDown={(event) => event.stopPropagation()}
-                          />
-
-                          <span className="load-bounds-hint">Global load factor g is clipped to [g_min, g_max], e.g. 0.5-1.5 means 50%-150% of base load.</span>
-                          <span className="load-section-spacer" />
-
-                          <span className="load-strategy-hint">
-                            {scaleSamplingMode === 'truncated_normal'
-                              ? 'Truncated normal: sample g~N(μ,σ), reject values outside [g_min, g_max].'
-                              : scaleSamplingMode === 'uniform_bins'
-                                ? 'Uniform bins: split [g_min, g_max] into bins, cycle bins, then uniformly sample within selected bin.'
-                                : 'Bounded uniform: directly sample g uniformly in [g_min, g_max].'}
-                          </span>
-                          <span className="load-section-spacer" />
-
-                          <span className="load-section-title">Strategy</span>
-                          <span className="load-section-spacer" />
-
-                          <label className="baseline-label" htmlFor="scale-mode-select">Mode</label>
-                          <select
-                            id="scale-mode-select"
-                            className="baseline-select"
-                            value={scaleSamplingMode}
-                            disabled={isLoadConfigLocked}
-                            onChange={(event) => setScaleSamplingMode(event.target.value as ScaleSamplingMode)}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onMouseDown={(event) => event.stopPropagation()}
-                          >
-                            <option value="truncated_normal">truncated_normal</option>
-                            <option value="uniform_bins">uniform_bins</option>
-                            <option value="bounded_uniform">bounded_uniform</option>
-                          </select>
-
-                          {scaleSamplingMode === 'truncated_normal' ? (
-                            <>
-                              <label className="baseline-label" htmlFor="global-scale-mu">Global μ</label>
-                              <input
-                                id="global-scale-mu"
-                                className="load-input"
-                                type="number"
-                                step="0.01"
-                                value={globalScaleMu}
-                                disabled={isLoadConfigLocked}
-                                onChange={(event) => setGlobalScaleMu(Number(event.target.value))}
-                                onPointerDown={(event) => event.stopPropagation()}
-                                onMouseDown={(event) => event.stopPropagation()}
-                              />
-
-                              <label className="baseline-label" htmlFor="global-scale-sigma">Global σ</label>
-                              <input
-                                id="global-scale-sigma"
-                                className="load-input"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={globalScaleSigma}
-                                disabled={isLoadConfigLocked}
-                                onChange={(event) => setGlobalScaleSigma(Number(event.target.value))}
-                                onPointerDown={(event) => event.stopPropagation()}
-                                onMouseDown={(event) => event.stopPropagation()}
-                              />
-                            </>
-                          ) : null}
-
-                          {scaleSamplingMode === 'uniform_bins' ? (
-                            <>
-                              <label className="baseline-label" htmlFor="uniform-bins">Uniform bins</label>
-                              <input
-                                id="uniform-bins"
-                                className="load-input"
-                                type="number"
-                                step="1"
-                                min="1"
-                                value={scaleUniformBins}
-                                disabled={isLoadConfigLocked}
-                                onChange={(event) => setScaleUniformBins(Number(event.target.value))}
-                                onPointerDown={(event) => event.stopPropagation()}
-                                onMouseDown={(event) => event.stopPropagation()}
-                              />
-                            </>
-                          ) : null}
-
-                          <label className="baseline-label" htmlFor="node-noise-sigma">Node noise σ</label>
-                          <input
-                            id="node-noise-sigma"
-                            className="load-input"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={nodeNoiseSigma}
-                            disabled={isLoadConfigLocked}
-                            onChange={(event) => setNodeNoiseSigma(Number(event.target.value))}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onMouseDown={(event) => event.stopPropagation()}
-                          />
-                        </div>
-
-                        <p className="baseline-note">Current process: define bounds first, then apply selected strategy.</p>
-                        {/* TODO(alloy-ui): wire Load Config state to backend DatasetBuildConfig/SampleGenerationConfig payload. */}
-                        {/* TODO(alloy-ui): add inline validation for min<max, sigma>0, and bins>=1 with field-level hints. */}
-                        {/* TODO(alloy-ui): backend currently supports truncated_normal/uniform_bins; add bounded_uniform policy in sample_generation.py. */}
-                        <span className="card-port card-port-input" title="Input: basecase context" />
-                      </div>
+                        <LoadConfigCard
+                          position={loadCardPos}
+                          isDragging={isLoadCardDragging}
+                          cardRef={loadConfigRef}
+                          isLocked={isLoadConfigLocked}
+                          scaleSamplingMode={scaleSamplingMode}
+                          globalScaleMu={globalScaleMu}
+                          globalScaleSigma={globalScaleSigma}
+                          globalScaleMin={globalScaleMin}
+                          globalScaleMax={globalScaleMax}
+                          scaleUniformBins={scaleUniformBins}
+                          nodeNoiseSigma={nodeNoiseSigma}
+                          onCardPointerDown={handleLoadCardPointerDown}
+                          onHeaderPointerDown={handleLoadCardDragStart}
+                          onToggleLock={() => setIsLoadConfigLocked((prev) => !prev)}
+                          onModeChange={setScaleSamplingMode}
+                          onGlobalScaleMuChange={setGlobalScaleMu}
+                          onGlobalScaleSigmaChange={setGlobalScaleSigma}
+                          onGlobalScaleMinChange={setGlobalScaleMin}
+                          onGlobalScaleMaxChange={setGlobalScaleMax}
+                          onScaleUniformBinsChange={setScaleUniformBins}
+                          onNodeNoiseSigmaChange={setNodeNoiseSigma}
+                        />
                       </div>
                     </div>
                   </div>
@@ -714,14 +418,7 @@ function App() {
             </Panel>
           </Group>
         </main>
-      ) : (
-        <main className="workbench-main">
-          <div className="panel-shell tab2-shell">
-            <div className="panel-title">Tab2 - Topology UI Placeholder</div>
-            <p>Topology selector will be implemented in the next step.</p>
-          </div>
-        </main>
-      )}
+      ) : <Tab2Placeholder />}
     </div>
   )
 }

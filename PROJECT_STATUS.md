@@ -180,6 +180,7 @@ $$
 - 2026-02-15: Improved card text operability by making card body text selectable and restricting drag gesture to header handle only.
 - 2026-02-15: Updated card drag behavior to allow dragging from non-text blank areas while preserving text selection, and moved/clarified bounds-strategy guidance in Load Config.
 - 2026-02-15: Fixed Load Config grid alignment so section dividers/titles stay full-width and labels/controls keep stable left-right columns.
+- 2026-02-15: Started UI decoupling by extracting workbench panels/cards/toolbar into reusable components and keeping `App.tsx` as orchestration layer.
 
 ### Multi-Layer Configuration
 ```
