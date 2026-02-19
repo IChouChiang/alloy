@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import './Tab2TopologyEditor.css'
 
-import type { TopologySelectionState, TopologyTargetCounts } from '../types'
-import { TopologySpecListPanel } from './TopologySpecListPanel'
-import { useTopologyCanvasInteraction } from './hooks/useTopologyCanvasInteraction'
-import { EMPTY_TOPOLOGY_SELECTION, useTopologyGraphData } from './hooks/useTopologyGraphData'
+import type { TopologySelectionState, TopologyTargetCounts } from '../types.ts'
+import { TopologySpecListPanel } from './TopologySpecListPanel.tsx'
+import { useTopologyCanvasInteraction } from './hooks/useTopologyCanvasInteraction.ts'
+import { EMPTY_TOPOLOGY_SELECTION, useTopologyGraphData } from './hooks/useTopologyGraphData.ts'
 
+/** Props for Tab2 topology editor container. */
 type Tab2TopologyEditorProps = {
   selection: TopologySelectionState
   topologyTargets: TopologyTargetCounts

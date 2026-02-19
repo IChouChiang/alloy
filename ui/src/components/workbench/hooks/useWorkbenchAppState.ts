@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 
-import { DEFAULT_TOPOLOGY_SELECTION } from '../constants'
+import { DEFAULT_TOPOLOGY_SELECTION } from '../constants.ts'
 import type {
     TabKey,
     ThemeMode,
     TopologySelectionState,
     TopologyTargetCounts,
-} from '../types'
+} from '../types.ts'
 
 type UseWorkbenchAppStateResult = {
   activeTab: TabKey

@@ -1,16 +1,18 @@
 import { useCallback, useRef, useState } from 'react'
 
-import type { TopologyGraphPayload } from '../../types'
-import { useTopologyLayoutPersistence } from './useTopologyLayoutPersistence'
-import { useTopologyPointerInteractions } from './useTopologyPointerInteractions'
+import type { TopologyGraphPayload } from '../../types.ts'
+import { useTopologyLayoutPersistence } from './useTopologyLayoutPersistence.ts'
+import { useTopologyPointerInteractions } from './useTopologyPointerInteractions.ts'
 
 const VIEWBOX_WIDTH = 920
 const VIEWBOX_HEIGHT = 580
 
+/** Input contract for topology canvas interaction orchestration. */
 type UseTopologyCanvasInteractionArgs = {
   graph: TopologyGraphPayload | null
 }
 
+/** Output contract for topology canvas state, derived layout and handlers. */
 type UseTopologyCanvasInteractionResult = {
   svgRef: React.RefObject<SVGSVGElement | null>
   graphZoom: number
@@ -62,28 +64,34 @@ export function useTopologyCanvasInteraction({
     onGraphReset: resetGraphTransform,
   })
 
+  /** Restricts graph zoom to stable UX bounds. */
   const clampGraphZoom = (value: number) => {
     return Math.min(2.2, Math.max(0.5, value))
   }
 
+  /** Zooms in graph viewport by one step. */
   const zoomGraphIn = () => {
     setGraphZoom((prev) => clampGraphZoom(prev + 0.1))
   }
 
+  /** Zooms out graph viewport by one step. */
   const zoomGraphOut = () => {
     setGraphZoom((prev) => clampGraphZoom(prev - 0.1))
   }
 
+  /** Resets graph zoom and offset back to defaults. */
   const resetGraphZoom = () => {
     resetGraphTransform()
   }
 
+  /** Handles wheel-driven zoom centered on current viewport transform. */
   const handleGraphWheel = (event: React.WheelEvent<SVGSVGElement>) => {
     event.preventDefault()
     const direction = event.deltaY < 0 ? 1 : -1
     setGraphZoom((prev) => clampGraphZoom(prev + direction * 0.08))
   }
 
+  /** Fits all visible bus nodes into the fixed viewBox with margin. */
   const fitGraphView = () => {
     if (!graph || graph.buses.length === 0) {
       return

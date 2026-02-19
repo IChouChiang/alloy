@@ -122,6 +122,38 @@ $$
 
 ### Change Log
 
+- 2026-02-19: Unified frontend local import style to explicit TS/TSX extensions.
+  - Normalized relative imports under `ui/src` to explicit `.ts` / `.tsx` suffixes to remove mixed style and avoid editor-side module-resolution inconsistencies.
+  - Verified with TypeScript diagnostics (`No errors found`) and successful `ui` build.
+
+- 2026-02-19: Refactored frontend app composition by extracting Tab1 pane container.
+  - Added `ui/src/components/workbench/layout/WorkbenchTab1Pane.tsx` to host Tab1 panel composition and `WorkbenchCanvasPanel` prop wiring.
+  - Reduced `ui/src/App.tsx` complexity from large orchestration block to top-level routing and state ownership (`85` lines after split).
+  - Revalidated `ui` build to confirm behavior-preserving refactor.
+
+- 2026-02-19: Improved frontend maintainability with selective refactor and TSDoc coverage pass.
+  - Split `WorkbenchCanvasPanel` mega prop contract into `ui/src/components/workbench/layout/WorkbenchCanvasPanel.types.ts` to reduce component file size and isolate interface evolution.
+  - Expanded TSDoc coverage on high-complexity hooks (`useWorkbenchCanvasController`, `useWorkbenchLoadConfigState`, topology interaction hooks) and newly introduced card/layout props.
+  - Re-validated `ui` build after documentation/refactor-only changes (no behavior changes).
+
+- 2026-02-19: Started Tab1 configuration-card restructuring for backend-aligned sample-build controls.
+  - Removed unsupported frontend load mode `bounded_uniform`; Load card now exposes only backend-supported modes (`truncated_normal`, `uniform_bins`).
+  - Added new draggable/lockable cards: `Feature Construction` (`num_iterations`), `Data Split` (`train/val/test_seen/test_unseen`), `Topology Sampling` (seen/unseen sampling modes), and `Build Runtime` (`seed`, `num_workers`, `chunk_size`, `max_attempt_multiplier`).
+  - Set defaults to backend/paper-aligned values, with requested overrides: `Topology Sampling` defaults to `uniform_cycle`; `Build Runtime` defaults to `num_workers = logical_cores - 2`; `tiny_check` remains backend/CLI-only (not exposed in UI).
+  - Expanded Tab1 canvas drag/link chain and `Fit` coverage to include all cards; `ui` build validated.
+
+- 2026-02-19: Changed Renewable Config penetration `η` to baseline-linked auto interpolation by bus count (piecewise linear using paper anchor systems) and made the field read-only to align frontend behavior with backend rule; `ui` build validated.
+
+- 2026-02-19: Expanded Renewable Config card with backend-aligned distribution parameters (Weibull λ/k, Beta α/β, wind curve `v_in/v_rated/v_out`, and `g_stc`) and added Tab1 canvas `Fit` viewport action similar to Tab2; `ui` build validated.
+
+- 2026-02-19: Started Renewable Config card MVP on Tab1 canvas by adding draggable/lockable `Renewable Config` card, wiring its state into app hooks, and extending card links from `Load Config -> Renewable Config -> Topology Targets`; `ui` build validated.
+
+- 2026-02-19: Added explicit TODO markers for normalization/metric/loss/physics gaps discovered in case39 forensic audit.
+  - TODO(normalization): materialized training path currently bypasses target z-score normalization.
+  - TODO(correlative-loss): correlative/combined loss exists but is not wired in benchmark training path.
+  - TODO(metric-scope): probabilistic accuracy currently aggregates over all buses; should be generator-bus scoped for paper alignment.
+  - TODO(physics-kernel): `GSGCNLayer` computes `phi_e`/`phi_f` but does not use them in final output path.
+
 - 2026-01-31: Consolidated status into this file and removed standalone step summaries.
   - Physics aggregation
   - Trainable transformations

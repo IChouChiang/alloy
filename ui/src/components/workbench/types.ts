@@ -17,12 +17,18 @@ export type Point = {
  *
  * - `truncated_normal`: sample from N(μ,σ) and reject outside bounds.
  * - `uniform_bins`: cycle bins within bounds then sample uniformly in selected bin.
- * - `bounded_uniform`: sample uniformly within bounds.
  */
-export type ScaleSamplingMode = 'truncated_normal' | 'uniform_bins' | 'bounded_uniform'
+export type ScaleSamplingMode = 'truncated_normal' | 'uniform_bins'
 
 /** Stable card identifiers used by registry and wiring logic. */
-export type CardId = 'case_select' | 'load_config'
+export type CardId =
+  | 'case_select'
+  | 'load_config'
+  | 'renewable_config'
+  | 'feature_construction'
+  | 'data_split'
+  | 'topology_sampling'
+  | 'build_runtime'
 
 /** Port direction in the card graph. */
 export type PortDirection = 'input' | 'output'
@@ -151,3 +157,6 @@ export type TopologyTargetCounts = {
   /** Required count of unseen topology IDs. */
   unseen: number
 }
+
+/** Topology-spec selection strategy for sample generation. */
+export type TopologySamplingMode = 'uniform_random' | 'uniform_cycle'

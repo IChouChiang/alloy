@@ -1,7 +1,7 @@
 import type { ChangeEvent, PointerEvent, RefObject, SyntheticEvent } from 'react'
 
-import type { Point, ScaleSamplingMode } from '../types'
-import { LockIcon } from './LockIcon'
+import type { Point, ScaleSamplingMode } from '../types.ts'
+import { LockIcon } from './LockIcon.tsx'
 
 /** Props for the Load Config card. */
 type LoadConfigCardProps = {
@@ -184,9 +184,7 @@ export function LoadConfigCard({
         <span className="load-strategy-hint">
           {scaleSamplingMode === 'truncated_normal'
             ? 'Truncated normal: sample g~N(μ,σ), reject values outside [g_min, g_max].'
-            : scaleSamplingMode === 'uniform_bins'
-              ? 'Uniform bins: split [g_min, g_max] into bins, cycle bins, then uniformly sample within selected bin.'
-              : 'Bounded uniform: directly sample g uniformly in [g_min, g_max].'}
+            : 'Uniform bins: split [g_min, g_max] into bins, cycle bins, then uniformly sample within selected bin.'}
         </span>
         <span className="load-section-spacer" />
 
@@ -205,7 +203,6 @@ export function LoadConfigCard({
         >
           <option value="truncated_normal">truncated_normal</option>
           <option value="uniform_bins">uniform_bins</option>
-          <option value="bounded_uniform">bounded_uniform</option>
         </select>
 
         {scaleSamplingMode === 'truncated_normal' ? (
@@ -275,7 +272,6 @@ export function LoadConfigCard({
       <p className="baseline-note">Current process: define bounds first, then apply selected strategy.</p>
       {/* TODO(alloy-ui): wire Load Config state to backend DatasetBuildConfig/SampleGenerationConfig payload. */}
       {/* TODO(alloy-ui): add inline validation for min<max, sigma>0, and bins>=1 with field-level hints. */}
-      {/* TODO(alloy-ui): backend currently supports truncated_normal/uniform_bins; add bounded_uniform policy in sample_generation.py. */}
       <span className="card-port card-port-output" title="Output: load generation config" />
       <span className="card-port card-port-input" title="Input: basecase context" />
     </div>

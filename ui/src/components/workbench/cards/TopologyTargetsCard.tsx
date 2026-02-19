@@ -1,7 +1,7 @@
 import type { ChangeEvent, PointerEvent, RefObject, SyntheticEvent } from 'react'
 
-import type { Point } from '../types'
-import { LockIcon } from './LockIcon'
+import type { Point } from '../types.ts'
+import { LockIcon } from './LockIcon.tsx'
 
 /** Props for topology target-count card. */
 type TopologyTargetsCardProps = {

@@ -203,6 +203,10 @@ def assemble_case39(experiment: ExperimentConfig) -> Case39Assembly:
         supervised_mse_loss,
         TrainingConfig(epochs=1, device=config.device, show_progress=True),
     )
+    # TODO(normalization): Wire target z-score normalization in materialized
+    # training path and add inverse-transform for paper-aligned evaluation.
+    # TODO(correlative-loss): Expose kappa in experiment config and switch to
+    # combined supervised + correlative loss after baseline ablation.
 
     if _has_materialized_dataset(config):
         dataloaders = _build_materialized_dataloaders(config)
@@ -237,6 +241,9 @@ def assemble_case39(experiment: ExperimentConfig) -> Case39Assembly:
         trainer=trainer,
         dataloaders=dataloaders,
         batch_to_inputs=batch_to_inputs,
+        # TODO(metric-scope): Current thresholds are paper-aligned, but
+        # probabilistic accuracy is still aggregated over all buses instead of
+        # generator buses only.
         pg_threshold_pu=1.0 / float(net.sn_mva),
         vg_threshold_pu=1e-3,
     )

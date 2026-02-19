@@ -1,10 +1,11 @@
 import type {
-    TopologySelectionState,
-    TopologySpec,
-    TopologySplitGroup,
-    TopologyTargetCounts,
-} from '../types'
+  TopologySelectionState,
+  TopologySpec,
+  TopologySplitGroup,
+  TopologyTargetCounts,
+} from '../types.ts'
 
+/** Props for topology spec list and split-assignment side panel. */
 type TopologySpecListPanelProps = {
   assignment: TopologySelectionState
   topologyTargets: TopologyTargetCounts

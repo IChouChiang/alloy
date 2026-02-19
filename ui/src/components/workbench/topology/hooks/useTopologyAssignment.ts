@@ -6,7 +6,7 @@ import type {
     TopologySpec,
     TopologySplitGroup,
     TopologyVisualEdge,
-} from '../../types'
+} from '../../types.ts'
 
 type UseTopologyAssignmentArgs = {
   graph: TopologyGraphPayload | null

@@ -91,6 +91,8 @@ def evaluate_split_metrics(
         pg_hits += int(pg_ok.sum().item())
         vg_hits += int(vg_ok.sum().item())
         joint_hits += int(joint_ok.sum().item())
+        # TODO(metric-scope): Restrict probabilistic-accuracy denominator to
+        # generator buses to match paper metric definition.
         total_elements += int(pg_ok.numel())
 
     denom_batches = max(total_batches, 1)
