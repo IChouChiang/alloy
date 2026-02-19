@@ -198,6 +198,7 @@ $$
 - 2026-02-19: Added initial GitHub Actions CI workflow (`.github/workflows/ci.yml`) with Python test job (`pytest -q tests`) and frontend validation job (`npm ci`, `npm run lint`, `npm run build` in `ui/`).
 - 2026-02-19: Adjusted initial frontend CI gate to build-only (`npm ci`, `npm run build`) because current repository has existing lint debt; plan to re-enable lint after dedicated cleanup.
 - 2026-02-19: Landed Git governance baseline in repository: added `.github/CODEOWNERS`, `.github/pull_request_template.md`, and `.github/BRANCH_PROTECTION.md` to enforce Trunk-Based short-lived branch workflow via PR checks and review gates.
+- 2026-02-19: Published repository to GitHub remote `origin` (`https://github.com/IChouChiang/alloy.git`) and set upstream tracking for branch `feat/ui-workbench-shell`.
 
 ### Multi-Layer Configuration
 ```
