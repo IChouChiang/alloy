@@ -199,6 +199,9 @@ $$
 - 2026-02-19: Adjusted initial frontend CI gate to build-only (`npm ci`, `npm run build`) because current repository has existing lint debt; plan to re-enable lint after dedicated cleanup.
 - 2026-02-19: Landed Git governance baseline in repository: added `.github/CODEOWNERS`, `.github/pull_request_template.md`, and `.github/BRANCH_PROTECTION.md` to enforce Trunk-Based short-lived branch workflow via PR checks and review gates.
 - 2026-02-19: Published repository to GitHub remote `origin` (`https://github.com/IChouChiang/alloy.git`) and set upstream tracking for branch `feat/ui-workbench-shell`.
+- 2026-02-19: Started frontend >300-line split implementation by refactoring `useTopologyCanvasInteraction` into dedicated hooks: `useTopologyLayoutPersistence` (layout restore/persist/reset) and `useTopologyPointerInteractions` (pan/node-drag pointer state machine); behavior preserved and `ui` build validated.
+- 2026-02-19: Completed second frontend >300-line split by refactoring `useTopologyGraphData` into `topologyApi` (graph load + validate fallback transport) and `useTopologyAssignment` (visual-edge + assignment derivation), reducing `useTopologyGraphData` to orchestration-only and validating `ui` build.
+- 2026-02-19: Completed third frontend >300-line split by refactoring `ui/src/App.tsx` into focused hooks (`useWorkbenchAppState`, `useWorkbenchLoadConfigState`, `useWorkbenchCanvasController`), reducing `App.tsx` from 330 to 180 lines while preserving Tab1/Tab2 behavior and validating `ui` build.
 
 ### Multi-Layer Configuration
 ```
