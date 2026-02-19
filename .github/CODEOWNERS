@@ -1,0 +1,12 @@
+# Default owners for all files
+* @ichou
+
+# Frontend (React/TypeScript)
+/ui/ @ichou
+
+# Workflows and repository governance
+/.github/ @ichou
+
+# Python package and experiments
+/alloy/ @ichou
+/tests/ @ichou
