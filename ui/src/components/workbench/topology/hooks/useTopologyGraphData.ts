@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import type {
-  TopologyGraphPayload,
-  TopologySelectionState,
-  TopologySpec,
-  TopologySplitGroup,
-  TopologyVisualEdge,
+    TopologyGraphPayload,
+    TopologySelectionState,
+    TopologySpec,
+    TopologySplitGroup,
+    TopologyVisualEdge,
 } from '../../types'
-
-const TOPOLOGY_API_BASE_CANDIDATES = ['', 'http://localhost:8000', 'http://127.0.0.1:8000'] as const
+import { loadCase39TopologyGraph, validateTopologySpecs } from '../api/topologyApi'
+import {
+    deriveEditableStateFromSelection,
+    useTopologyAssignment,
+} from './useTopologyAssignment'
 
 /** Default topology selection with baseline `N` only. */
 export const EMPTY_TOPOLOGY_SELECTION: TopologySelectionState = {
@@ -70,34 +73,10 @@ export function useTopologyGraphData({
   useEffect(() => {
     let active = true
 
-    const fetchJsonWithFallback = async <T,>(
-      path: string,
-      init?: RequestInit,
-    ): Promise<{ data: T; baseUrl: string }> => {
-      let lastError = 'unknown error'
-      for (const baseUrl of TOPOLOGY_API_BASE_CANDIDATES) {
-        const requestUrl = `${baseUrl}${path}`
-        try {
-          const response = await fetch(requestUrl, init)
-          if (!response.ok) {
-            lastError = `${requestUrl} -> HTTP ${response.status}`
-            continue
-          }
-          const data = (await response.json()) as T
-          return { data, baseUrl }
-        } catch (error) {
-          lastError = `${requestUrl} -> ${String(error)}`
-        }
-      }
-      throw new Error(lastError)
-    }
-
     const loadGraph = async () => {
       try {
-        const result = await fetchJsonWithFallback<TopologyGraphPayload>(
-          '/api/topology/case39/graph',
-        )
-        const payload = result.data
+        const result = await loadCase39TopologyGraph()
+        const payload = result.payload
         if (!active) {
           return
         }
@@ -124,136 +103,19 @@ export function useTopologyGraphData({
   }, [])
 
   useEffect(() => {
-    if (selection.specs.length === 0) {
-      setSelectedLineIds(new Set())
-      setSplitGroupByTopologyId({})
-      return
-    }
-
-    const nextSelected = new Set<number>()
-    const nextGroups: Record<string, TopologySplitGroup> = {}
-
-    for (const spec of selection.specs) {
-      if (spec.topology_id === 'N') {
-        continue
-      }
-      const line = spec.line_outages[0]
-      if (line == null) {
-        continue
-      }
-      const idPart = spec.topology_id.split('_')[1]
-      const parsed = Number(idPart)
-      if (Number.isFinite(parsed)) {
-        nextSelected.add(parsed)
-      }
-      nextGroups[spec.topology_id] = selection.unseenTopologyIds.includes(
-        spec.topology_id,
-      )
-        ? 'unseen'
-        : 'seen'
-    }
-
-    setSelectedLineIds(nextSelected)
-    setSplitGroupByTopologyId(nextGroups)
+    const editableState = deriveEditableStateFromSelection(selection)
+    setSelectedLineIds(editableState.selectedLineIds)
+    setSplitGroupByTopologyId(editableState.splitGroupByTopologyId)
   }, [selection])
-
-  const lineById = useMemo(() => {
-    if (!graph) {
-      return new Map<number, TopologyVisualEdge>()
-    }
-    return new Map(graph.lines.map((line) => [line.line_idx, line]))
-  }, [graph])
-
-  const visualEdges = useMemo<TopologyVisualEdge[]>(() => {
-    if (!graph) {
-      return []
-    }
-    if (graph.edges && graph.edges.length > 0) {
-      return graph.edges
-    }
-    return graph.lines.map((line) => ({
-      edge_id: `line-${line.line_idx}`,
-      kind: 'line',
-      from_bus: line.from_bus,
-      to_bus: line.to_bus,
-      name: line.name,
-      line_idx: line.line_idx,
-    }))
-  }, [graph])
-
-  const selectedLines = useMemo(() => {
-    return [...selectedLineIds]
-      .map((lineId) => lineById.get(lineId))
-      .filter(
-        (line): line is TopologyVisualEdge & { line_idx: number } =>
-          line != null && line.line_idx != null,
-      )
-      .sort((left, right) => left.line_idx - right.line_idx)
-  }, [lineById, selectedLineIds])
-
-  const generatedSpecs = useMemo<TopologySpec[]>(() => {
-    const specs: TopologySpec[] = [{ topology_id: 'N', line_outages: [] }]
-    for (const line of selectedLines) {
-      specs.push({
-        topology_id: `N-1_${line.line_idx}_${line.from_bus}_${line.to_bus}`,
-        line_outages: [{ from_bus: line.from_bus, to_bus: line.to_bus }],
-      })
-    }
-    return specs
-  }, [selectedLines])
-
-  const assignment = useMemo<TopologySelectionState>(() => {
-    const seen = ['N']
-    const unseen: string[] = []
-    for (const spec of generatedSpecs) {
-      if (spec.topology_id === 'N') {
-        continue
-      }
-      const group = splitGroupByTopologyId[spec.topology_id] ?? 'seen'
-      if (group === 'unseen') {
-        unseen.push(spec.topology_id)
-      } else {
-        seen.push(spec.topology_id)
-      }
-    }
-    return {
-      specs: generatedSpecs,
-      seenTopologyIds: seen,
-      unseenTopologyIds: unseen,
-    }
-  }, [generatedSpecs, splitGroupByTopologyId])
-
-  const selectedSpecs = useMemo(() => {
-    return assignment.specs.filter((spec) => spec.topology_id !== 'N')
-  }, [assignment.specs])
+  const { visualEdges, generatedSpecs, assignment, selectedSpecs } =
+    useTopologyAssignment({
+      graph,
+      selectedLineIds,
+      splitGroupByTopologyId,
+    })
 
   const validateSpecs = async (specs: TopologySpec[]) => {
-    const candidates =
-      apiBaseUrl !== '' ? [apiBaseUrl] : [...TOPOLOGY_API_BASE_CANDIDATES]
-    let lastError = 'unknown error'
-    for (const baseUrl of candidates) {
-      const requestUrl = `${baseUrl}/api/topology/specs/validate`
-      try {
-        const response = await fetch(requestUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ topology_specs: specs }),
-        })
-        if (!response.ok) {
-          const payload = await response
-            .json()
-            .catch(() => ({ detail: response.statusText }))
-          lastError = `${requestUrl} -> ${String(
-            payload.detail ?? response.statusText,
-          )}`
-          continue
-        }
-        return response.json()
-      } catch (error) {
-        lastError = `${requestUrl} -> ${String(error)}`
-      }
-    }
-    throw new Error(lastError)
+    return validateTopologySpecs(specs, apiBaseUrl)
   }
 
   const toggleLineSelection = async (line: TopologyVisualEdge) => {

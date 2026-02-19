@@ -143,3 +143,11 @@ export type TopologySelectionState = {
   /** Topology IDs assigned to test_unseen pool. */
   unseenTopologyIds: string[]
 }
+
+/** Target counts for topology split assignment (seen includes baseline N). */
+export type TopologyTargetCounts = {
+  /** Required count of seen topology IDs (including baseline N). */
+  seen: number
+  /** Required count of unseen topology IDs. */
+  unseen: number
+}

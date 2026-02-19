@@ -1,11 +1,13 @@
 import type {
-  TopologySelectionState,
-  TopologySpec,
-  TopologySplitGroup,
+    TopologySelectionState,
+    TopologySpec,
+    TopologySplitGroup,
+    TopologyTargetCounts,
 } from '../types'
 
 type TopologySpecListPanelProps = {
   assignment: TopologySelectionState
+  topologyTargets: TopologyTargetCounts
   selectedSpecs: TopologySpec[]
   splitGroupByTopologyId: Record<string, TopologySplitGroup>
   focusedTopologyId: string | null
@@ -25,6 +27,7 @@ type TopologySpecListPanelProps = {
  */
 export function TopologySpecListPanel({
   assignment,
+  topologyTargets,
   selectedSpecs,
   splitGroupByTopologyId,
   focusedTopologyId,
@@ -44,9 +47,11 @@ export function TopologySpecListPanel({
         </p>
         <p>
           Seen: <strong>{assignment.seenTopologyIds.length}</strong>
+          <span className="topology-target-progress"> / target {topologyTargets.seen}</span>
         </p>
         <p>
           Unseen: <strong>{assignment.unseenTopologyIds.length}</strong>
+          <span className="topology-target-progress"> / target {topologyTargets.unseen}</span>
         </p>
         <p className="topology-summary-hint">
           Hover card to highlight line; click remove to drop one outage.

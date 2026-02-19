@@ -94,6 +94,11 @@
   color: var(--tab-active-text);
 }
 
+.tab-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .header-spacer {
   flex: 1;
 }
@@ -536,19 +541,6 @@
   align-items: center;
 }
 
-.panel-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.panel-title-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .topology-inline-summary {
   font-size: 12px;
   color: var(--chat-role-text);
@@ -562,4 +554,49 @@
   font-size: 12px;
   padding: 5px 8px;
   cursor: pointer;
+}
+
+.topology-nav-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.topology-target-progress {
+  font-size: 12px;
+  color: var(--chat-role-text);
+}
+
+.topology-target-card {
+  width: 300px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--panel-bg);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: absolute;
+  box-shadow: 0 6px 18px rgba(15, 23, 40, 0.08);
+  cursor: grab;
+  user-select: text;
+  z-index: 3;
+}
+
+.topology-target-card.dragging {
+  cursor: grabbing;
+  box-shadow: 0 10px 24px rgba(15, 23, 40, 0.14);
+}
+
+.topology-target-grid {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) minmax(0, 120px);
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.topology-target-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
 }

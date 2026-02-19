@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
 import './Tab2TopologyEditor.css'
 
-import type { TopologySelectionState } from '../types'
+import type { TopologySelectionState, TopologyTargetCounts } from '../types'
 import { TopologySpecListPanel } from './TopologySpecListPanel'
 import { useTopologyCanvasInteraction } from './hooks/useTopologyCanvasInteraction'
 import { EMPTY_TOPOLOGY_SELECTION, useTopologyGraphData } from './hooks/useTopologyGraphData'
 
 type Tab2TopologyEditorProps = {
   selection: TopologySelectionState
+  topologyTargets: TopologyTargetCounts
   onSelectionChange: (next: TopologySelectionState) => void
   onBackToWorkbench: () => void
 }
@@ -27,6 +28,7 @@ const nodeKindColor: Record<string, string> = {
  */
 export function Tab2TopologyEditor({
   selection,
+  topologyTargets,
   onSelectionChange,
   onBackToWorkbench,
 }: Tab2TopologyEditorProps) {
@@ -109,6 +111,16 @@ export function Tab2TopologyEditor({
   const saveSelection = async () => {
     try {
       setIsSaving(true)
+      if (assignment.seenTopologyIds.length !== topologyTargets.seen) {
+        throw new Error(
+          `Seen topology count mismatch: expected ${topologyTargets.seen} (including N), got ${assignment.seenTopologyIds.length}.`,
+        )
+      }
+      if (assignment.unseenTopologyIds.length !== topologyTargets.unseen) {
+        throw new Error(
+          `Unseen topology count mismatch: expected ${topologyTargets.unseen}, got ${assignment.unseenTopologyIds.length}.`,
+        )
+      }
       setStatus('Validating and saving topology selection...')
       await validateSpecs(assignment.specs)
       onSelectionChange(assignment)
@@ -244,6 +256,7 @@ export function Tab2TopologyEditor({
 
         <TopologySpecListPanel
           assignment={assignment}
+          topologyTargets={topologyTargets}
           selectedSpecs={selectedSpecs}
           splitGroupByTopologyId={splitGroupByTopologyId}
           focusedTopologyId={focusedTopologyId}
