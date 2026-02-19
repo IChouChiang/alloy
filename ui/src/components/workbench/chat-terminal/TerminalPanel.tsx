@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 
-import type { ThemeMode } from '../types'
+import type { ThemeMode } from '../types.ts'
 
 /** Props for the terminal panel. */
 type TerminalPanelProps = {

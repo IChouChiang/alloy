@@ -307,6 +307,63 @@
   box-shadow: 0 10px 24px rgba(15, 23, 40, 0.14);
 }
 
+.renewable-config-card {
+  width: 320px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--panel-bg);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: absolute;
+  box-shadow: 0 6px 18px rgba(15, 23, 40, 0.08);
+  cursor: grab;
+  user-select: text;
+  z-index: 3;
+}
+
+.renewable-config-card.dragging {
+  cursor: grabbing;
+  box-shadow: 0 10px 24px rgba(15, 23, 40, 0.14);
+}
+
+.feature-card,
+.split-card,
+.sampling-card,
+.runtime-card {
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--panel-bg);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: absolute;
+  box-shadow: 0 6px 18px rgba(15, 23, 40, 0.08);
+  cursor: grab;
+  user-select: text;
+  z-index: 3;
+}
+
+.feature-card {
+  width: 280px;
+}
+
+.split-card,
+.sampling-card,
+.runtime-card {
+  width: 320px;
+}
+
+.feature-card.dragging,
+.split-card.dragging,
+.sampling-card.dragging,
+.runtime-card.dragging {
+  cursor: grabbing;
+  box-shadow: 0 10px 24px rgba(15, 23, 40, 0.14);
+}
+
 .baseline-header {
   display: flex;
   align-items: center;
@@ -397,6 +454,23 @@
   align-items: center;
 }
 
+.renewable-config-grid {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(170px, 1.2fr);
+  gap: 8px 10px;
+  align-items: center;
+}
+
+.feature-card .load-config-grid,
+.split-card .load-config-grid,
+.sampling-card .load-config-grid,
+.runtime-card .load-config-grid {
+  display: grid;
+  grid-template-columns: minmax(92px, 1fr) minmax(0, 1.2fr);
+  gap: 8px 10px;
+  align-items: center;
+}
+
 .load-config-grid > .baseline-label {
   grid-column: 1;
   justify-self: start;
@@ -406,7 +480,28 @@
 .load-config-grid > .load-input {
   grid-column: 2;
   width: 100%;
+  min-width: 0;
   justify-self: stretch;
+}
+
+.renewable-config-grid > .baseline-label {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.renewable-config-grid > .baseline-select,
+.renewable-config-grid > .load-input,
+.renewable-config-grid > .baseline-value {
+  grid-column: 2;
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
+}
+
+.feature-card .baseline-label,
+.sampling-card .baseline-label,
+.runtime-card .baseline-label {
+  overflow-wrap: anywhere;
 }
 
 .load-section-title {

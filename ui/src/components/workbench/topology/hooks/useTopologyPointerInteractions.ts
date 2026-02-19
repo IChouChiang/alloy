@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react';
 
+/** 2D point in topology SVG world coordinates. */
 type BusPoint = { x: number; y: number }
 
+/** Input contract for topology pointer interaction handling. */
 type UseTopologyPointerInteractionsArgs = {
   svgRef: React.RefObject<SVGSVGElement | null>
   graphZoom: number
@@ -12,6 +14,7 @@ type UseTopologyPointerInteractionsArgs = {
   viewBox: { width: number; height: number }
 }
 
+/** Output contract exposing topology pan/drag state and handlers. */
 type UseTopologyPointerInteractionsResult = {
   isGraphPanning: boolean
   draggingBusId: number | null
@@ -72,6 +75,7 @@ export function useTopologyPointerInteractions({
     startBusY: 0,
   })
 
+  /** Converts browser client coordinates to current SVG viewBox coordinates. */
   const toViewboxPointFromClient = (clientX: number, clientY: number) => {
     if (!svgRef.current) {
       return { x: 0, y: 0 }
@@ -86,6 +90,7 @@ export function useTopologyPointerInteractions({
     }
   }
 
+  /** Starts graph panning when background is pressed. */
   const handleGraphPointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
     const target = event.target as Element | null
     if (target?.closest('.topology-line-hit, .topology-node')) {
@@ -101,6 +106,7 @@ export function useTopologyPointerInteractions({
     setIsGraphPanning(true)
   }
 
+  /** Applies active node-drag or graph-pan movement on pointer move. */
   const handleGraphPointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
     if (
       nodeDragState.current.pointerId === event.pointerId &&
@@ -140,6 +146,7 @@ export function useTopologyPointerInteractions({
     }
   }
 
+  /** Finalizes pan/drag interactions and releases captured pointers. */
   const handleGraphPointerUp = (event: React.PointerEvent<SVGSVGElement>) => {
     if (nodeDragState.current.pointerId === event.pointerId) {
       nodeDragState.current.pointerId = null
@@ -160,6 +167,7 @@ export function useTopologyPointerInteractions({
     }
   }
 
+  /** Starts dragging a single bus node from its current world position. */
   const handleNodePointerDown = (
     busId: number,
     event: React.PointerEvent<SVGCircleElement>,

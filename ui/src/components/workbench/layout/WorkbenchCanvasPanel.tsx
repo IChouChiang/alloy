@@ -1,106 +1,81 @@
-import type { RefObject } from 'react'
+import { BuildRuntimeCard } from '../cards/BuildRuntimeCard.tsx'
+import { CaseSelectCard } from '../cards/CaseSelectCard.tsx'
+import { DataSplitCard } from '../cards/DataSplitCard.tsx'
+import { FeatureConstructionCard } from '../cards/FeatureConstructionCard.tsx'
+import { LoadConfigCard } from '../cards/LoadConfigCard.tsx'
+import { RenewableConfigCard } from '../cards/RenewableConfigCard.tsx'
+import { TopologySamplingCard } from '../cards/TopologySamplingCard.tsx'
+import { TopologyTargetsCard } from '../cards/TopologyTargetsCard.tsx'
+import type { Point } from '../types.ts'
+import { CanvasToolbar } from './CanvasToolbar.tsx'
+import type { WorkbenchCanvasPanelProps } from './WorkbenchCanvasPanel.types.ts'
 
-import { CaseSelectCard } from '../cards/CaseSelectCard'
-import { LoadConfigCard } from '../cards/LoadConfigCard'
-import { TopologyTargetsCard } from '../cards/TopologyTargetsCard'
-import type {
-  Point,
-  ScaleSamplingMode,
-  TopologySelectionState,
-  TopologyTargetCounts,
-} from '../types'
-import { CanvasToolbar } from './CanvasToolbar'
-
-type WorkbenchCanvasPanelProps = {
-  canvasRef: RefObject<HTMLDivElement | null>
-  baselineRef: RefObject<HTMLDivElement | null>
-  loadConfigRef: RefObject<HTMLDivElement | null>
-  topologyTargetsRef: RefObject<HTMLDivElement | null>
-  canvasZoom: number
-  canvasOffset: Point
-  isCanvasPanning: boolean
-  cardPos: Point
-  loadCardPos: Point
-  topologyTargetsCardPos: Point
-  isDragging: boolean
-  isLoadCardDragging: boolean
-  isTopologyTargetsCardDragging: boolean
-  selectedBasecase: string
-  isBasecaseLocked: boolean
-  isLoadConfigLocked: boolean
-  isTopologyTargetsLocked: boolean
-  scaleSamplingMode: ScaleSamplingMode
-  globalScaleMu: number
-  globalScaleSigma: number
-  globalScaleMin: number
-  globalScaleMax: number
-  scaleUniformBins: number
-  nodeNoiseSigma: number
-  topologySelection: TopologySelectionState
-  topologyTargets: TopologyTargetCounts
-  basecases: readonly string[]
-  caseCardWidth: number
-  loadCardWidth: number
-  baselineHeight: number
-  loadHeight: number
-  topologyTargetsHeight: number
-  onShowTopologyTab: () => void
-  onWheel: (event: React.WheelEvent<HTMLDivElement>) => void
-  onCanvasPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void
-  onCanvasPointerMove: (event: React.PointerEvent<HTMLDivElement>) => void
-  onCanvasPointerUp: (event: React.PointerEvent<HTMLDivElement>) => void
-  onZoomOut: () => void
-  onZoomIn: () => void
-  onCenterAt100: () => void
-  onBaselineCardPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void
-  onBaselineHeaderPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void
-  onToggleBasecaseLock: () => void
-  onChangeBasecase: (value: string) => void
-  onLoadCardPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void
-  onLoadHeaderPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void
-  onToggleLoadConfigLock: () => void
-  onScaleSamplingModeChange: (value: ScaleSamplingMode) => void
-  onGlobalScaleMuChange: (value: number) => void
-  onGlobalScaleSigmaChange: (value: number) => void
-  onGlobalScaleMinChange: (value: number) => void
-  onGlobalScaleMaxChange: (value: number) => void
-  onScaleUniformBinsChange: (value: number) => void
-  onNodeNoiseSigmaChange: (value: number) => void
-  onTopologyTargetSeenChange: (value: number) => void
-  onTopologyTargetUnseenChange: (value: number) => void
-  onTopologyTargetsCardPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void
-  onTopologyTargetsHeaderPointerDown: (
-    event: React.PointerEvent<HTMLDivElement>,
-  ) => void
-  onToggleTopologyTargetsLock: () => void
-}
-
-/**
- * Center canvas panel that renders linked workbench cards and toolbar controls.
- *
- * Args:
- *   props: Canvas view model and interaction handlers from app orchestration layer.
- *
- * Returns:
- *   Rendered center canvas panel.
- */
+/** Center canvas panel rendering all Tab1 workflow cards and links. */
 export function WorkbenchCanvasPanel(props: WorkbenchCanvasPanelProps) {
   const portCenterXOffset = 1
-  const baselineOutputPort = {
-    x: props.cardPos.x + props.caseCardWidth + portCenterXOffset,
-    y: props.cardPos.y + props.baselineHeight / 2,
-  }
-  const loadInputPort = {
-    x: props.loadCardPos.x - portCenterXOffset,
-    y: props.loadCardPos.y + props.loadHeight / 2,
-  }
-  const loadOutputPort = {
-    x: props.loadCardPos.x + props.loadCardWidth + portCenterXOffset,
-    y: props.loadCardPos.y + props.loadHeight / 2,
-  }
-  const topologyTargetsInputPort = {
-    x: props.topologyTargetsCardPos.x - portCenterXOffset,
-    y: props.topologyTargetsCardPos.y + props.topologyTargetsHeight / 2,
+  /** Computes vertical center of a card for link anchoring. */
+  const centerY = (position: Point, height: number) => position.y + height / 2
+
+  const points = {
+    baseOut: {
+      x: props.cardPos.x + props.caseCardWidth + portCenterXOffset,
+      y: centerY(props.cardPos, props.baselineHeight),
+    },
+    loadIn: {
+      x: props.loadCardPos.x - portCenterXOffset,
+      y: centerY(props.loadCardPos, props.loadHeight),
+    },
+    loadOut: {
+      x: props.loadCardPos.x + props.loadCardWidth + portCenterXOffset,
+      y: centerY(props.loadCardPos, props.loadHeight),
+    },
+    renewableIn: {
+      x: props.renewableCardPos.x - portCenterXOffset,
+      y: centerY(props.renewableCardPos, props.renewableHeight),
+    },
+    renewableOut: {
+      x: props.renewableCardPos.x + props.renewableCardWidth + portCenterXOffset,
+      y: centerY(props.renewableCardPos, props.renewableHeight),
+    },
+    featureIn: {
+      x: props.featureCardPos.x - portCenterXOffset,
+      y: centerY(props.featureCardPos, props.featureHeight),
+    },
+    featureOut: {
+      x: props.featureCardPos.x + props.featureCardWidth + portCenterXOffset,
+      y: centerY(props.featureCardPos, props.featureHeight),
+    },
+    splitIn: {
+      x: props.splitCardPos.x - portCenterXOffset,
+      y: centerY(props.splitCardPos, props.splitHeight),
+    },
+    splitOut: {
+      x: props.splitCardPos.x + props.splitCardWidth + portCenterXOffset,
+      y: centerY(props.splitCardPos, props.splitHeight),
+    },
+    topologySamplingIn: {
+      x: props.topologySamplingCardPos.x - portCenterXOffset,
+      y: centerY(props.topologySamplingCardPos, props.topologySamplingHeight),
+    },
+    topologySamplingOut: {
+      x:
+        props.topologySamplingCardPos.x +
+        props.topologySamplingCardWidth +
+        portCenterXOffset,
+      y: centerY(props.topologySamplingCardPos, props.topologySamplingHeight),
+    },
+    runtimeIn: {
+      x: props.runtimeCardPos.x - portCenterXOffset,
+      y: centerY(props.runtimeCardPos, props.runtimeHeight),
+    },
+    runtimeOut: {
+      x: props.runtimeCardPos.x + props.runtimeCardWidth + portCenterXOffset,
+      y: centerY(props.runtimeCardPos, props.runtimeHeight),
+    },
+    topologyTargetsIn: {
+      x: props.topologyTargetsCardPos.x - portCenterXOffset,
+      y: centerY(props.topologyTargetsCardPos, props.topologyTargetsHeight),
+    },
   }
 
   return (
@@ -120,27 +95,24 @@ export function WorkbenchCanvasPanel(props: WorkbenchCanvasPanelProps) {
           onZoomOut={props.onZoomOut}
           onZoomIn={props.onZoomIn}
           onCenterAt100={props.onCenterAt100}
+          onFitView={props.onFitView}
         />
         <div
           className="canvas-content"
-          style={{ transform: `translate(${props.canvasOffset.x}px, ${props.canvasOffset.y}px) scale(${props.canvasZoom})` }}
+          style={{
+            transform: `translate(${props.canvasOffset.x}px, ${props.canvasOffset.y}px) scale(${props.canvasZoom})`,
+          }}
         >
           <svg className="canvas-links" aria-hidden="true">
-            <line
-              x1={baselineOutputPort.x}
-              y1={baselineOutputPort.y}
-              x2={loadInputPort.x}
-              y2={loadInputPort.y}
-              className="canvas-link-line"
-            />
-            <line
-              x1={loadOutputPort.x}
-              y1={loadOutputPort.y}
-              x2={topologyTargetsInputPort.x}
-              y2={topologyTargetsInputPort.y}
-              className="canvas-link-line"
-            />
+            <line x1={points.baseOut.x} y1={points.baseOut.y} x2={points.loadIn.x} y2={points.loadIn.y} className="canvas-link-line" />
+            <line x1={points.loadOut.x} y1={points.loadOut.y} x2={points.renewableIn.x} y2={points.renewableIn.y} className="canvas-link-line" />
+            <line x1={points.renewableOut.x} y1={points.renewableOut.y} x2={points.featureIn.x} y2={points.featureIn.y} className="canvas-link-line" />
+            <line x1={points.featureOut.x} y1={points.featureOut.y} x2={points.splitIn.x} y2={points.splitIn.y} className="canvas-link-line" />
+            <line x1={points.splitOut.x} y1={points.splitOut.y} x2={points.topologySamplingIn.x} y2={points.topologySamplingIn.y} className="canvas-link-line" />
+            <line x1={points.topologySamplingOut.x} y1={points.topologySamplingOut.y} x2={points.runtimeIn.x} y2={points.runtimeIn.y} className="canvas-link-line" />
+            <line x1={points.runtimeOut.x} y1={points.runtimeOut.y} x2={points.topologyTargetsIn.x} y2={points.topologyTargetsIn.y} className="canvas-link-line" />
           </svg>
+
           <CaseSelectCard
             position={props.cardPos}
             isDragging={props.isDragging}
@@ -153,6 +125,7 @@ export function WorkbenchCanvasPanel(props: WorkbenchCanvasPanelProps) {
             onToggleLock={props.onToggleBasecaseLock}
             onChangeBasecase={props.onChangeBasecase}
           />
+
           <LoadConfigCard
             position={props.loadCardPos}
             isDragging={props.isLoadCardDragging}
@@ -176,6 +149,100 @@ export function WorkbenchCanvasPanel(props: WorkbenchCanvasPanelProps) {
             onScaleUniformBinsChange={props.onScaleUniformBinsChange}
             onNodeNoiseSigmaChange={props.onNodeNoiseSigmaChange}
           />
+
+          <RenewableConfigCard
+            position={props.renewableCardPos}
+            isDragging={props.isRenewableCardDragging}
+            cardRef={props.renewableConfigRef}
+            isLocked={props.isRenewableConfigLocked}
+            penetrationRate={props.renewablePenetrationRate}
+            windShare={props.renewableWindShare}
+            candidateBusCount={props.renewableCandidateBusCount}
+            weibullLambda={props.renewableWeibullLambda}
+            weibullK={props.renewableWeibullK}
+            betaAlpha={props.renewableBetaAlpha}
+            betaBeta={props.renewableBetaBeta}
+            vIn={props.renewableVIn}
+            vRated={props.renewableVRated}
+            vOut={props.renewableVOut}
+            gStc={props.renewableGStc}
+            onCardPointerDown={props.onRenewableCardPointerDown}
+            onHeaderPointerDown={props.onRenewableHeaderPointerDown}
+            onToggleLock={props.onToggleRenewableConfigLock}
+            onWindShareChange={props.onRenewableWindShareChange}
+            onCandidateBusCountChange={props.onRenewableCandidateBusCountChange}
+            onWeibullLambdaChange={props.onRenewableWeibullLambdaChange}
+            onWeibullKChange={props.onRenewableWeibullKChange}
+            onBetaAlphaChange={props.onRenewableBetaAlphaChange}
+            onBetaBetaChange={props.onRenewableBetaBetaChange}
+            onVInChange={props.onRenewableVInChange}
+            onVRatedChange={props.onRenewableVRatedChange}
+            onVOutChange={props.onRenewableVOutChange}
+            onGStcChange={props.onRenewableGStcChange}
+          />
+
+          <FeatureConstructionCard
+            position={props.featureCardPos}
+            isDragging={props.isFeatureCardDragging}
+            cardRef={props.featureConstructionRef}
+            isLocked={props.isFeatureConstructionLocked}
+            numIterations={props.featureNumIterations}
+            onCardPointerDown={props.onFeatureCardPointerDown}
+            onHeaderPointerDown={props.onFeatureHeaderPointerDown}
+            onToggleLock={props.onToggleFeatureConstructionLock}
+            onNumIterationsChange={props.onFeatureNumIterationsChange}
+          />
+
+          <DataSplitCard
+            position={props.splitCardPos}
+            isDragging={props.isDataSplitCardDragging}
+            cardRef={props.dataSplitRef}
+            isLocked={props.isDataSplitLocked}
+            trainCount={props.splitTrain}
+            valCount={props.splitVal}
+            testSeenCount={props.splitTestSeen}
+            testUnseenCount={props.splitTestUnseen}
+            onCardPointerDown={props.onDataSplitCardPointerDown}
+            onHeaderPointerDown={props.onDataSplitHeaderPointerDown}
+            onToggleLock={props.onToggleDataSplitLock}
+            onTrainCountChange={props.onSplitTrainChange}
+            onValCountChange={props.onSplitValChange}
+            onTestSeenCountChange={props.onSplitTestSeenChange}
+            onTestUnseenCountChange={props.onSplitTestUnseenChange}
+          />
+
+          <TopologySamplingCard
+            position={props.topologySamplingCardPos}
+            isDragging={props.isTopologySamplingCardDragging}
+            cardRef={props.topologySamplingRef}
+            isLocked={props.isTopologySamplingLocked}
+            seenSamplingMode={props.topologySamplingSeenMode}
+            unseenSamplingMode={props.topologySamplingUnseenMode}
+            onCardPointerDown={props.onTopologySamplingCardPointerDown}
+            onHeaderPointerDown={props.onTopologySamplingHeaderPointerDown}
+            onToggleLock={props.onToggleTopologySamplingLock}
+            onSeenSamplingModeChange={props.onTopologySamplingSeenModeChange}
+            onUnseenSamplingModeChange={props.onTopologySamplingUnseenModeChange}
+          />
+
+          <BuildRuntimeCard
+            position={props.runtimeCardPos}
+            isDragging={props.isBuildRuntimeCardDragging}
+            cardRef={props.buildRuntimeRef}
+            isLocked={props.isBuildRuntimeLocked}
+            seed={props.runtimeSeed}
+            numWorkers={props.runtimeNumWorkers}
+            chunkSize={props.runtimeChunkSize}
+            maxAttemptMultiplier={props.runtimeMaxAttemptMultiplier}
+            onCardPointerDown={props.onBuildRuntimeCardPointerDown}
+            onHeaderPointerDown={props.onBuildRuntimeHeaderPointerDown}
+            onToggleLock={props.onToggleBuildRuntimeLock}
+            onSeedChange={props.onRuntimeSeedChange}
+            onNumWorkersChange={props.onRuntimeNumWorkersChange}
+            onChunkSizeChange={props.onRuntimeChunkSizeChange}
+            onMaxAttemptMultiplierChange={props.onRuntimeMaxAttemptMultiplierChange}
+          />
+
           <TopologyTargetsCard
             position={props.topologyTargetsCardPos}
             isDragging={props.isTopologyTargetsCardDragging}

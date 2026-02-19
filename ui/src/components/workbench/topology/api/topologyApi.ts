@@ -1,5 +1,6 @@
-import type { TopologyGraphPayload, TopologySpec } from '../../types'
+import type { TopologyGraphPayload, TopologySpec } from '../../types.ts'
 
+/** Ordered topology API base URL candidates used for backend fallback requests. */
 export const TOPOLOGY_API_BASE_CANDIDATES = [
   '',
   'http://localhost:8000',

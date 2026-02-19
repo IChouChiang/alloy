@@ -1,4 +1,4 @@
-import type { TopologySelectionState } from './types'
+import type { TopologySelectionState } from './types.ts'
 
 /** Supported pandapower base case identifiers for case selection card. */
 export const PANDAPOWER_BASECASES = [

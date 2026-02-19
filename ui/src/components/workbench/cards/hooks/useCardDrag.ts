@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import type { Point } from '../../types'
+import type { Point } from '../../types.ts'
 
 type UseCardDragArgs = {
   canvasRef: React.RefObject<HTMLDivElement | null>

@@ -1,5 +1,6 @@
-import type { TabKey, ThemeMode } from '../types'
+import type { TabKey, ThemeMode } from '../types.ts'
 
+/** Props for top-level workbench header controls. */
 type WorkbenchHeaderProps = {
   activeTab: TabKey
   themeMode: ThemeMode

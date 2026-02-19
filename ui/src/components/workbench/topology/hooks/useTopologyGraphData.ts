@@ -6,12 +6,12 @@ import type {
     TopologySpec,
     TopologySplitGroup,
     TopologyVisualEdge,
-} from '../../types'
-import { loadCase39TopologyGraph, validateTopologySpecs } from '../api/topologyApi'
+} from '../../types.ts'
+import { loadCase39TopologyGraph, validateTopologySpecs } from '../api/topologyApi.ts'
 import {
     deriveEditableStateFromSelection,
     useTopologyAssignment,
-} from './useTopologyAssignment'
+} from './useTopologyAssignment.ts'
 
 /** Default topology selection with baseline `N` only. */
 export const EMPTY_TOPOLOGY_SELECTION: TopologySelectionState = {
