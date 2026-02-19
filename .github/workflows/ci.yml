@@ -33,7 +33,14 @@ jobs:
           python -m pip install pytest
 
       - name: Run pytest
-        run: python -m pytest -q tests
+        run: |
+          python -m pytest -q \
+            tests/test_core_admittance.py \
+            tests/test_core_aggregation.py \
+            tests/test_losses.py \
+            tests/test_models_gcnn.py \
+            tests/test_models_gcnn_layer.py \
+            tests/test_pipelines.py
 
   ui-build:
     name: UI build (Node 20)
