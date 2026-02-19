@@ -211,6 +211,7 @@ $$
 - 2026-02-19: Synchronized Topology Targets lock with header navigation: when card-3 is locked, both card-level `Open Topology Editor` and top `Tab2 - Topology` entry are disabled and visually grayed out.
 - 2026-02-19: Fixed initial Tab1 link misalignment (especially card-2 to card-3) by measuring card heights on mount and syncing via `ResizeObserver`, so link endpoints align with port dots immediately after page load or Tab2->Tab1 return.
 - 2026-02-19: Fixed post-Tab2-return corner-link glitch by rebinding card height sync/observers when Tab1 becomes active, preventing stale detached-node measurements from pulling link endpoints to card corners.
+- 2026-02-19: Stabilized GitHub Actions Python job by switching to interpreter-bound commands (`python -m pip`, `python -m pytest`) to prevent package-resolution drift causing `alloy.data` import errors in CI.
 
 ### Multi-Layer Configuration
 ```
