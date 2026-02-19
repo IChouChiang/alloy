@@ -14,4 +14,4 @@ applyTo: '**'
 11. 随着复杂度提升，主动提出加强 git 版本管理如 branch 的创建，全局的 Codegen，自动化的测试等，来保证项目的可维护性和可扩展性。在 git 提交以及 push 和增加新特性时，留意 CI 状态并且维护 GitHub Actions。
 12. 待办会以 TODO 放在注释中，修改时留意并回报当前是否需要处理这些待办事项。
 13. 前端(TypeScript/React)的复杂函数、导出类型与公共组件Props必须有TSDoc注释；单文件超过 300 行时优先拆分并在 PR 中说明拆分边界。300 行并非一个硬编码的阈值，但当超过时需要严格审视。
-14. 对于 branch 采用 Trunk-Based + 短命分支，分支命名：feat/*、fix/*、refactor/*、chore/* 等，默认 Squash merge，只有必须保留历史时才用 rebase merge，必须通过 CI 才能 merge，PR 合并后自动删除远程分支，避免分支堆积；对大功能采用 Stacked PR（多层小 PR 逐步合并），不要长期大分支。
+14. 对于 branch 采用 Trunk-Based + 短命分支，分支命名：feat/*、fix/*、refactor/*、chore/* 等，默认 Squash merge，只有必须保留历史时才用 rebase merge，必须通过 CI 才能 merge，PR 合并后自动删除远程分支，避免分支堆积；对大功能采用 Stacked PR（多层小 PR 逐步合并），不要长期大分支；采用 CODEOWNERS + PR 模板。

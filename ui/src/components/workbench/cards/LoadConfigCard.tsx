@@ -276,6 +276,7 @@ export function LoadConfigCard({
       {/* TODO(alloy-ui): wire Load Config state to backend DatasetBuildConfig/SampleGenerationConfig payload. */}
       {/* TODO(alloy-ui): add inline validation for min<max, sigma>0, and bins>=1 with field-level hints. */}
       {/* TODO(alloy-ui): backend currently supports truncated_normal/uniform_bins; add bounded_uniform policy in sample_generation.py. */}
+      <span className="card-port card-port-output" title="Output: load generation config" />
       <span className="card-port card-port-input" title="Input: basecase context" />
     </div>
   )

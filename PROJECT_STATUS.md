@@ -202,6 +202,15 @@ $$
 - 2026-02-19: Started frontend >300-line split implementation by refactoring `useTopologyCanvasInteraction` into dedicated hooks: `useTopologyLayoutPersistence` (layout restore/persist/reset) and `useTopologyPointerInteractions` (pan/node-drag pointer state machine); behavior preserved and `ui` build validated.
 - 2026-02-19: Completed second frontend >300-line split by refactoring `useTopologyGraphData` into `topologyApi` (graph load + validate fallback transport) and `useTopologyAssignment` (visual-edge + assignment derivation), reducing `useTopologyGraphData` to orchestration-only and validating `ui` build.
 - 2026-02-19: Completed third frontend >300-line split by refactoring `ui/src/App.tsx` into focused hooks (`useWorkbenchAppState`, `useWorkbenchLoadConfigState`, `useWorkbenchCanvasController`), reducing `App.tsx` from 330 to 180 lines while preserving Tab1/Tab2 behavior and validating `ui` build.
+- 2026-02-19: Implemented Tab1->Tab2 topology target workflow: added Tab1 seen/unseen target inputs, propagated target counts through app state, added Tab2 side-panel current/target progress, and enforced exact seen/unseen count validation before Save Selection; `ui` build validated.
+- 2026-02-19: Migrated topology target controls from top bar into a dedicated draggable Canvas card (`TopologyTargetsCard`) so target configuration follows the same card-based interaction model as Baseline/Load Config; retained Tab2 save-time count validation and validated `ui` build.
+- 2026-02-19: Moved top-header topology progress summary and `Open Topology Editor` action into `TopologyTargetsCard` to strengthen content-action association and reduce cross-area context switching.
+- 2026-02-19: Added a second canvas connection line from `Load Config` (card 2) to `Topology Targets` (card 3), matching the existing card-link visual style to improve workflow readability.
+- 2026-02-19: Enhanced canvas links with port-center snapping (line endpoints align to visible port dots) and fixed a missing `Load Config` output port so the card-2 to card-3 link origin is explicitly shown.
+- 2026-02-19: Added lock/unlock control to `TopologyTargetsCard` (card 3) aligned with Baseline/Load Config UX; when locked, target inputs and `Open Topology Editor` action are disabled to avoid accidental changes.
+- 2026-02-19: Synchronized Topology Targets lock with header navigation: when card-3 is locked, both card-level `Open Topology Editor` and top `Tab2 - Topology` entry are disabled and visually grayed out.
+- 2026-02-19: Fixed initial Tab1 link misalignment (especially card-2 to card-3) by measuring card heights on mount and syncing via `ResizeObserver`, so link endpoints align with port dots immediately after page load or Tab2->Tab1 return.
+- 2026-02-19: Fixed post-Tab2-return corner-link glitch by rebinding card height sync/observers when Tab1 becomes active, preventing stale detached-node measurements from pulling link endpoints to card corners.
 
 ### Multi-Layer Configuration
 ```

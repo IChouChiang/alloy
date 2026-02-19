@@ -1,14 +1,21 @@
 import { useMemo, useState } from 'react'
 
 import { DEFAULT_TOPOLOGY_SELECTION } from '../constants'
-import type { TabKey, ThemeMode, TopologySelectionState } from '../types'
+import type {
+    TabKey,
+    ThemeMode,
+    TopologySelectionState,
+    TopologyTargetCounts,
+} from '../types'
 
 type UseWorkbenchAppStateResult = {
   activeTab: TabKey
   themeMode: ThemeMode
   topologySelection: TopologySelectionState
+  topologyTargets: TopologyTargetCounts
   selectedTopologyCount: number
   setTopologySelection: React.Dispatch<React.SetStateAction<TopologySelectionState>>
+  setTopologyTargets: React.Dispatch<React.SetStateAction<TopologyTargetCounts>>
   showWorkbenchTab: () => void
   showTopologyTab: () => void
   toggleThemeMode: () => void
@@ -24,6 +31,10 @@ export function useWorkbenchAppState(): UseWorkbenchAppStateResult {
   const [themeMode, setThemeMode] = useState<ThemeMode>('light')
   const [topologySelection, setTopologySelection] =
     useState<TopologySelectionState>(DEFAULT_TOPOLOGY_SELECTION)
+  const [topologyTargets, setTopologyTargets] = useState<TopologyTargetCounts>({
+    seen: 5,
+    unseen: 2,
+  })
 
   const showWorkbenchTab = () => {
     setActiveTab('tab1')
@@ -45,8 +56,10 @@ export function useWorkbenchAppState(): UseWorkbenchAppStateResult {
     activeTab,
     themeMode,
     topologySelection,
+    topologyTargets,
     selectedTopologyCount,
     setTopologySelection,
+    setTopologyTargets,
     showWorkbenchTab,
     showTopologyTab,
     toggleThemeMode,

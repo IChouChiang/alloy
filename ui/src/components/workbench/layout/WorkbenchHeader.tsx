@@ -4,6 +4,7 @@ type WorkbenchHeaderProps = {
   activeTab: TabKey
   themeMode: ThemeMode
   selectedTopologyCount: number
+  isTopologyTabLocked: boolean
   onShowWorkbenchTab: () => void
   onShowTopologyTab: () => void
   onToggleThemeMode: () => void
@@ -16,6 +17,7 @@ type WorkbenchHeaderProps = {
  *   activeTab: Currently active top-level tab.
  *   themeMode: Current theme mode.
  *   selectedTopologyCount: Number of selected topologies for Tab2 badge.
+ *   isTopologyTabLocked: Whether Tab2 entry is disabled by Topology Targets lock.
  *   onShowWorkbenchTab: Handler to switch to Tab1.
  *   onShowTopologyTab: Handler to switch to Tab2.
  *   onToggleThemeMode: Handler to toggle theme.
@@ -27,6 +29,7 @@ export function WorkbenchHeader({
   activeTab,
   themeMode,
   selectedTopologyCount,
+  isTopologyTabLocked,
   onShowWorkbenchTab,
   onShowTopologyTab,
   onToggleThemeMode,
@@ -41,6 +44,7 @@ export function WorkbenchHeader({
       </button>
       <button
         className={activeTab === 'tab2' ? 'tab-btn active' : 'tab-btn'}
+        disabled={isTopologyTabLocked}
         onClick={onShowTopologyTab}
       >
         Tab2 - Topology ({selectedTopologyCount})

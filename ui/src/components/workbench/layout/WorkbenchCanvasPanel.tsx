@@ -2,23 +2,33 @@ import type { RefObject } from 'react'
 
 import { CaseSelectCard } from '../cards/CaseSelectCard'
 import { LoadConfigCard } from '../cards/LoadConfigCard'
-import type { Point, ScaleSamplingMode, TopologySelectionState } from '../types'
+import { TopologyTargetsCard } from '../cards/TopologyTargetsCard'
+import type {
+  Point,
+  ScaleSamplingMode,
+  TopologySelectionState,
+  TopologyTargetCounts,
+} from '../types'
 import { CanvasToolbar } from './CanvasToolbar'
 
 type WorkbenchCanvasPanelProps = {
   canvasRef: RefObject<HTMLDivElement | null>
   baselineRef: RefObject<HTMLDivElement | null>
   loadConfigRef: RefObject<HTMLDivElement | null>
+  topologyTargetsRef: RefObject<HTMLDivElement | null>
   canvasZoom: number
   canvasOffset: Point
   isCanvasPanning: boolean
   cardPos: Point
   loadCardPos: Point
+  topologyTargetsCardPos: Point
   isDragging: boolean
   isLoadCardDragging: boolean
+  isTopologyTargetsCardDragging: boolean
   selectedBasecase: string
   isBasecaseLocked: boolean
   isLoadConfigLocked: boolean
+  isTopologyTargetsLocked: boolean
   scaleSamplingMode: ScaleSamplingMode
   globalScaleMu: number
   globalScaleSigma: number
@@ -27,11 +37,13 @@ type WorkbenchCanvasPanelProps = {
   scaleUniformBins: number
   nodeNoiseSigma: number
   topologySelection: TopologySelectionState
+  topologyTargets: TopologyTargetCounts
   basecases: readonly string[]
   caseCardWidth: number
   loadCardWidth: number
   baselineHeight: number
   loadHeight: number
+  topologyTargetsHeight: number
   onShowTopologyTab: () => void
   onWheel: (event: React.WheelEvent<HTMLDivElement>) => void
   onCanvasPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void
@@ -54,6 +66,13 @@ type WorkbenchCanvasPanelProps = {
   onGlobalScaleMaxChange: (value: number) => void
   onScaleUniformBinsChange: (value: number) => void
   onNodeNoiseSigmaChange: (value: number) => void
+  onTopologyTargetSeenChange: (value: number) => void
+  onTopologyTargetUnseenChange: (value: number) => void
+  onTopologyTargetsCardPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void
+  onTopologyTargetsHeaderPointerDown: (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => void
+  onToggleTopologyTargetsLock: () => void
 }
 
 /**
@@ -66,28 +85,27 @@ type WorkbenchCanvasPanelProps = {
  *   Rendered center canvas panel.
  */
 export function WorkbenchCanvasPanel(props: WorkbenchCanvasPanelProps) {
+  const portCenterXOffset = 1
   const baselineOutputPort = {
-    x: props.cardPos.x + props.caseCardWidth,
+    x: props.cardPos.x + props.caseCardWidth + portCenterXOffset,
     y: props.cardPos.y + props.baselineHeight / 2,
   }
   const loadInputPort = {
-    x: props.loadCardPos.x,
+    x: props.loadCardPos.x - portCenterXOffset,
     y: props.loadCardPos.y + props.loadHeight / 2,
+  }
+  const loadOutputPort = {
+    x: props.loadCardPos.x + props.loadCardWidth + portCenterXOffset,
+    y: props.loadCardPos.y + props.loadHeight / 2,
+  }
+  const topologyTargetsInputPort = {
+    x: props.topologyTargetsCardPos.x - portCenterXOffset,
+    y: props.topologyTargetsCardPos.y + props.topologyTargetsHeight / 2,
   }
 
   return (
     <div className="panel-shell canvas-shell">
-      <div className="panel-title panel-title-row">
-        <span>Center Canvas (UI Shell)</span>
-        <div className="panel-title-actions">
-          <span className="topology-inline-summary">
-            Topology set: {props.topologySelection.specs.length} (seen {props.topologySelection.seenTopologyIds.length} / unseen {props.topologySelection.unseenTopologyIds.length})
-          </span>
-          <button className="topology-nav-btn" type="button" onClick={props.onShowTopologyTab}>
-            Open Topology Editor
-          </button>
-        </div>
-      </div>
+      <div className="panel-title">Center Canvas (UI Shell)</div>
       <div
         className={`canvas-placeholder${props.isCanvasPanning ? ' panning' : ''}`}
         ref={props.canvasRef}
@@ -113,6 +131,13 @@ export function WorkbenchCanvasPanel(props: WorkbenchCanvasPanelProps) {
               y1={baselineOutputPort.y}
               x2={loadInputPort.x}
               y2={loadInputPort.y}
+              className="canvas-link-line"
+            />
+            <line
+              x1={loadOutputPort.x}
+              y1={loadOutputPort.y}
+              x2={topologyTargetsInputPort.x}
+              y2={topologyTargetsInputPort.y}
               className="canvas-link-line"
             />
           </svg>
@@ -150,6 +175,23 @@ export function WorkbenchCanvasPanel(props: WorkbenchCanvasPanelProps) {
             onGlobalScaleMaxChange={props.onGlobalScaleMaxChange}
             onScaleUniformBinsChange={props.onScaleUniformBinsChange}
             onNodeNoiseSigmaChange={props.onNodeNoiseSigmaChange}
+          />
+          <TopologyTargetsCard
+            position={props.topologyTargetsCardPos}
+            isDragging={props.isTopologyTargetsCardDragging}
+            cardRef={props.topologyTargetsRef}
+            isLocked={props.isTopologyTargetsLocked}
+            seenCount={props.topologySelection.seenTopologyIds.length}
+            unseenCount={props.topologySelection.unseenTopologyIds.length}
+            seenTarget={props.topologyTargets.seen}
+            unseenTarget={props.topologyTargets.unseen}
+            totalTopologyCount={props.topologySelection.specs.length}
+            onCardPointerDown={props.onTopologyTargetsCardPointerDown}
+            onHeaderPointerDown={props.onTopologyTargetsHeaderPointerDown}
+            onToggleLock={props.onToggleTopologyTargetsLock}
+            onSeenTargetChange={props.onTopologyTargetSeenChange}
+            onUnseenTargetChange={props.onTopologyTargetUnseenChange}
+            onOpenTopologyEditor={props.onShowTopologyTab}
           />
         </div>
       </div>

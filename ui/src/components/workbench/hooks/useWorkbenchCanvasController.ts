@@ -1,26 +1,32 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 
 import { useCardDrag } from '../cards/hooks/useCardDrag'
 import type { Point } from '../types'
 
 type UseWorkbenchCanvasControllerArgs = {
+  isTab1Active: boolean
   caseCardWidth: number
   loadCardWidth: number
+  topologyTargetsCardWidth: number
 }
 
 type UseWorkbenchCanvasControllerResult = {
   canvasRef: React.RefObject<HTMLDivElement | null>
   baselineRef: React.RefObject<HTMLDivElement | null>
   loadConfigRef: React.RefObject<HTMLDivElement | null>
+  topologyTargetsRef: React.RefObject<HTMLDivElement | null>
   canvasZoom: number
   canvasOffset: Point
   isCanvasPanning: boolean
   cardPos: Point
   loadCardPos: Point
+  topologyTargetsCardPos: Point
   isDragging: boolean
   isLoadCardDragging: boolean
+  isTopologyTargetsCardDragging: boolean
   baselineHeight: number
   loadHeight: number
+  topologyTargetsHeight: number
   handleCanvasWheel: (event: React.WheelEvent<HTMLDivElement>) => void
   handleCanvasPanStart: (event: React.PointerEvent<HTMLDivElement>) => void
   handleCanvasPanPointerMove: (event: React.PointerEvent<HTMLDivElement>) => void
@@ -32,6 +38,12 @@ type UseWorkbenchCanvasControllerResult = {
   handleBaselineCardPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void
   handleLoadCardDragStart: (event: React.PointerEvent<HTMLDivElement>) => void
   handleLoadCardPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void
+  handleTopologyTargetsCardDragStart: (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => void
+  handleTopologyTargetsCardPointerDown: (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => void
 }
 
 /**
@@ -41,8 +53,10 @@ type UseWorkbenchCanvasControllerResult = {
  * @returns Canvas refs, viewport state, drag state, and interaction handlers.
  */
 export function useWorkbenchCanvasController({
+  isTab1Active,
   caseCardWidth,
   loadCardWidth,
+  topologyTargetsCardWidth,
 }: UseWorkbenchCanvasControllerArgs): UseWorkbenchCanvasControllerResult {
   const MIN_ZOOM = 0.5
   const MAX_ZOOM = 1.8
@@ -53,6 +67,7 @@ export function useWorkbenchCanvasController({
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const baselineRef = useRef<HTMLDivElement | null>(null)
   const loadConfigRef = useRef<HTMLDivElement | null>(null)
+  const topologyTargetsRef = useRef<HTMLDivElement | null>(null)
   const [isCanvasPanning, setIsCanvasPanning] = useState(false)
   const canvasPanState = useRef<{
     isPanning: boolean
@@ -91,13 +106,79 @@ export function useWorkbenchCanvasController({
     canvasOffset,
     initialPosition: { x: 320, y: 24 },
   })
+  const topologyTargetsDrag = useCardDrag({
+    canvasRef,
+    cardRef: topologyTargetsRef,
+    canvasZoom,
+    canvasOffset,
+    initialPosition: { x: 680, y: 24 },
+  })
 
   const cardPos = baselineDrag.position
   const loadCardPos = loadDrag.position
   const isDragging = baselineDrag.isDragging
   const isLoadCardDragging = loadDrag.isDragging
-  const baselineHeight = baselineRef.current?.offsetHeight ?? 156
-  const loadHeight = loadConfigRef.current?.offsetHeight ?? 292
+  const isTopologyTargetsCardDragging = topologyTargetsDrag.isDragging
+  const topologyTargetsCardPos = topologyTargetsDrag.position
+  const [baselineHeight, setBaselineHeight] = useState(156)
+  const [loadHeight, setLoadHeight] = useState(292)
+  const [topologyTargetsHeight, setTopologyTargetsHeight] = useState(220)
+
+  useLayoutEffect(() => {
+    if (!isTab1Active) {
+      return undefined
+    }
+
+    const syncHeights = () => {
+      const baselineEl = baselineRef.current
+      const loadEl = loadConfigRef.current
+      const topologyTargetsEl = topologyTargetsRef.current
+
+      const nextBaselineHeight = baselineEl?.offsetHeight ?? 0
+      const nextLoadHeight = loadEl?.offsetHeight ?? 0
+      const nextTopologyTargetsHeight = topologyTargetsEl?.offsetHeight ?? 0
+
+      if (nextBaselineHeight > 0) {
+        setBaselineHeight((prev) => (
+          prev === nextBaselineHeight ? prev : nextBaselineHeight
+        ))
+      }
+      if (nextLoadHeight > 0) {
+        setLoadHeight((prev) => (prev === nextLoadHeight ? prev : nextLoadHeight))
+      }
+      if (nextTopologyTargetsHeight > 0) {
+        setTopologyTargetsHeight((prev) => (
+          prev === nextTopologyTargetsHeight ? prev : nextTopologyTargetsHeight
+        ))
+      }
+    }
+
+    syncHeights()
+    const frameId = requestAnimationFrame(syncHeights)
+
+    if (typeof ResizeObserver === 'undefined') {
+      return () => {
+        cancelAnimationFrame(frameId)
+      }
+    }
+
+    const observer = new ResizeObserver(syncHeights)
+
+    if (baselineRef.current) {
+      observer.observe(baselineRef.current)
+    }
+    if (loadConfigRef.current) {
+      observer.observe(loadConfigRef.current)
+    }
+    if (topologyTargetsRef.current) {
+      observer.observe(topologyTargetsRef.current)
+    }
+
+    return () => {
+      cancelAnimationFrame(frameId)
+      observer.disconnect()
+    }
+  }, [isTab1Active])
 
   const handleCanvasPanPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (
@@ -164,6 +245,17 @@ export function useWorkbenchCanvasController({
     handleLoadCardDragStart(event)
   }
 
+  const handleTopologyTargetsCardDragStart = topologyTargetsDrag.startDrag
+
+  const handleTopologyTargetsCardPointerDown = (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => {
+    if (!shouldStartCardDrag(event)) {
+      return
+    }
+    handleTopologyTargetsCardDragStart(event)
+  }
+
   const handleCanvasWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     event.preventDefault()
     const direction = event.deltaY < 0 ? 1 : -1
@@ -187,13 +279,19 @@ export function useWorkbenchCanvasController({
 
     const baselineCardHeight = baselineRef.current?.offsetHeight ?? 180
     const loadConfigCardHeight = loadConfigRef.current?.offsetHeight ?? 300
+    const topologyTargetsCardHeight = topologyTargetsRef.current?.offsetHeight ?? 220
 
-    const minX = Math.min(cardPos.x, loadCardPos.x)
-    const maxX = Math.max(cardPos.x + caseCardWidth, loadCardPos.x + loadCardWidth)
-    const minY = Math.min(cardPos.y, loadCardPos.y)
+    const minX = Math.min(cardPos.x, loadCardPos.x, topologyTargetsCardPos.x)
+    const maxX = Math.max(
+      cardPos.x + caseCardWidth,
+      loadCardPos.x + loadCardWidth,
+      topologyTargetsCardPos.x + topologyTargetsCardWidth,
+    )
+    const minY = Math.min(cardPos.y, loadCardPos.y, topologyTargetsCardPos.y)
     const maxY = Math.max(
       cardPos.y + baselineCardHeight,
       loadCardPos.y + loadConfigCardHeight,
+      topologyTargetsCardPos.y + topologyTargetsCardHeight,
     )
 
     const contentCenterX = (minX + maxX) / 2
@@ -210,7 +308,7 @@ export function useWorkbenchCanvasController({
     const target = event.target as HTMLElement | null
     if (
       target?.closest(
-        '.baseline-card, .load-config-card, .canvas-toolbar, .zoom-btn, .baseline-select, .load-input, .baseline-lock-btn, button, input, select, textarea, label',
+        '.baseline-card, .load-config-card, .topology-target-card, .canvas-toolbar, .zoom-btn, .baseline-select, .load-input, .baseline-lock-btn, button, input, select, textarea, label',
       )
     ) {
       return
@@ -230,15 +328,19 @@ export function useWorkbenchCanvasController({
     canvasRef,
     baselineRef,
     loadConfigRef,
+    topologyTargetsRef,
     canvasZoom,
     canvasOffset,
     isCanvasPanning,
     cardPos,
     loadCardPos,
+    topologyTargetsCardPos,
     isDragging,
     isLoadCardDragging,
+    isTopologyTargetsCardDragging,
     baselineHeight,
     loadHeight,
+    topologyTargetsHeight,
     handleCanvasWheel,
     handleCanvasPanStart,
     handleCanvasPanPointerMove,
@@ -250,5 +352,7 @@ export function useWorkbenchCanvasController({
     handleBaselineCardPointerDown,
     handleLoadCardDragStart,
     handleLoadCardPointerDown,
+    handleTopologyTargetsCardDragStart,
+    handleTopologyTargetsCardPointerDown,
   }
 }

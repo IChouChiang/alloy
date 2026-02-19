@@ -27,8 +27,10 @@ function App() {
     activeTab,
     themeMode,
     topologySelection,
+    topologyTargets,
     selectedTopologyCount,
     setTopologySelection,
+    setTopologyTargets,
     showWorkbenchTab,
     showTopologyTab,
     toggleThemeMode,
@@ -38,6 +40,7 @@ function App() {
     selectedBasecase,
     isBasecaseLocked,
     isLoadConfigLocked,
+    isTopologyTargetsLocked,
     scaleSamplingMode,
     globalScaleMu,
     globalScaleSigma,
@@ -55,21 +58,26 @@ function App() {
     setNodeNoiseSigma,
     toggleBasecaseLock,
     toggleLoadConfigLock,
+    toggleTopologyTargetsLock,
   } = useWorkbenchLoadConfigState()
 
   const {
     canvasRef,
     baselineRef,
     loadConfigRef,
+    topologyTargetsRef,
     canvasZoom,
     canvasOffset,
     isCanvasPanning,
     cardPos,
     loadCardPos,
+    topologyTargetsCardPos,
     isDragging,
     isLoadCardDragging,
+    isTopologyTargetsCardDragging,
     baselineHeight,
     loadHeight,
+    topologyTargetsHeight,
     handleCanvasWheel,
     handleCanvasPanStart,
     handleCanvasPanPointerMove,
@@ -81,9 +89,13 @@ function App() {
     handleBaselineCardPointerDown,
     handleLoadCardDragStart,
     handleLoadCardPointerDown,
+    handleTopologyTargetsCardDragStart,
+    handleTopologyTargetsCardPointerDown,
   } = useWorkbenchCanvasController({
+    isTab1Active: activeTab === 'tab1',
     caseCardWidth: caseCardDef.width,
     loadCardWidth: loadCardDef.width,
+    topologyTargetsCardWidth: 300,
   })
 
   return (
@@ -92,6 +104,7 @@ function App() {
         activeTab={activeTab}
         themeMode={themeMode}
         selectedTopologyCount={selectedTopologyCount}
+        isTopologyTabLocked={isTopologyTargetsLocked}
         onShowWorkbenchTab={showWorkbenchTab}
         onShowTopologyTab={showTopologyTab}
         onToggleThemeMode={toggleThemeMode}
@@ -107,16 +120,20 @@ function App() {
                     canvasRef={canvasRef}
                     baselineRef={baselineRef}
                     loadConfigRef={loadConfigRef}
+                    topologyTargetsRef={topologyTargetsRef}
                     canvasZoom={canvasZoom}
                     canvasOffset={canvasOffset}
                     isCanvasPanning={isCanvasPanning}
                     cardPos={cardPos}
                     loadCardPos={loadCardPos}
+                    topologyTargetsCardPos={topologyTargetsCardPos}
                     isDragging={isDragging}
                     isLoadCardDragging={isLoadCardDragging}
+                    isTopologyTargetsCardDragging={isTopologyTargetsCardDragging}
                     selectedBasecase={selectedBasecase}
                     isBasecaseLocked={isBasecaseLocked}
                     isLoadConfigLocked={isLoadConfigLocked}
+                    isTopologyTargetsLocked={isTopologyTargetsLocked}
                     scaleSamplingMode={scaleSamplingMode}
                     globalScaleMu={globalScaleMu}
                     globalScaleSigma={globalScaleSigma}
@@ -125,11 +142,13 @@ function App() {
                     scaleUniformBins={scaleUniformBins}
                     nodeNoiseSigma={nodeNoiseSigma}
                     topologySelection={topologySelection}
+                    topologyTargets={topologyTargets}
                     basecases={PANDAPOWER_BASECASES}
                     caseCardWidth={caseCardDef.width}
                     loadCardWidth={loadCardDef.width}
                     baselineHeight={baselineHeight}
                     loadHeight={loadHeight}
+                    topologyTargetsHeight={topologyTargetsHeight}
                     onShowTopologyTab={showTopologyTab}
                     onWheel={handleCanvasWheel}
                     onCanvasPointerDown={handleCanvasPanStart}
@@ -144,6 +163,9 @@ function App() {
                     onChangeBasecase={setSelectedBasecase}
                     onLoadCardPointerDown={handleLoadCardPointerDown}
                     onLoadHeaderPointerDown={handleLoadCardDragStart}
+                    onTopologyTargetsCardPointerDown={handleTopologyTargetsCardPointerDown}
+                    onTopologyTargetsHeaderPointerDown={handleTopologyTargetsCardDragStart}
+                    onToggleTopologyTargetsLock={toggleTopologyTargetsLock}
                     onToggleLoadConfigLock={toggleLoadConfigLock}
                     onScaleSamplingModeChange={setScaleSamplingMode}
                     onGlobalScaleMuChange={setGlobalScaleMu}
@@ -152,6 +174,12 @@ function App() {
                     onGlobalScaleMaxChange={setGlobalScaleMax}
                     onScaleUniformBinsChange={setScaleUniformBins}
                     onNodeNoiseSigmaChange={setNodeNoiseSigma}
+                    onTopologyTargetSeenChange={(value) => {
+                      setTopologyTargets((prev) => ({ ...prev, seen: value }))
+                    }}
+                    onTopologyTargetUnseenChange={(value) => {
+                      setTopologyTargets((prev) => ({ ...prev, unseen: value }))
+                    }}
                   />
                 </Panel>
                 <Separator className="resize-handle vertical" />
@@ -169,6 +197,7 @@ function App() {
       ) : (
         <Tab2TopologyEditor
           selection={topologySelection}
+          topologyTargets={topologyTargets}
           onSelectionChange={setTopologySelection}
           onBackToWorkbench={showWorkbenchTab}
         />

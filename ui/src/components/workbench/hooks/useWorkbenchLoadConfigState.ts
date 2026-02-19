@@ -6,6 +6,7 @@ type UseWorkbenchLoadConfigStateResult = {
   selectedBasecase: string
   isBasecaseLocked: boolean
   isLoadConfigLocked: boolean
+  isTopologyTargetsLocked: boolean
   scaleSamplingMode: ScaleSamplingMode
   globalScaleMu: number
   globalScaleSigma: number
@@ -23,6 +24,7 @@ type UseWorkbenchLoadConfigStateResult = {
   setNodeNoiseSigma: React.Dispatch<React.SetStateAction<number>>
   toggleBasecaseLock: () => void
   toggleLoadConfigLock: () => void
+  toggleTopologyTargetsLock: () => void
 }
 
 /**
@@ -34,6 +36,7 @@ export function useWorkbenchLoadConfigState(): UseWorkbenchLoadConfigStateResult
   const [selectedBasecase, setSelectedBasecase] = useState<string>('case39')
   const [isBasecaseLocked, setIsBasecaseLocked] = useState(true)
   const [isLoadConfigLocked, setIsLoadConfigLocked] = useState(true)
+  const [isTopologyTargetsLocked, setIsTopologyTargetsLocked] = useState(true)
   const [scaleSamplingMode, setScaleSamplingMode] =
     useState<ScaleSamplingMode>('truncated_normal')
   const [globalScaleMu, setGlobalScaleMu] = useState(1.0)
@@ -51,10 +54,15 @@ export function useWorkbenchLoadConfigState(): UseWorkbenchLoadConfigStateResult
     setIsLoadConfigLocked((prev) => !prev)
   }
 
+  const toggleTopologyTargetsLock = () => {
+    setIsTopologyTargetsLocked((prev) => !prev)
+  }
+
   return {
     selectedBasecase,
     isBasecaseLocked,
     isLoadConfigLocked,
+    isTopologyTargetsLocked,
     scaleSamplingMode,
     globalScaleMu,
     globalScaleSigma,
@@ -72,5 +80,6 @@ export function useWorkbenchLoadConfigState(): UseWorkbenchLoadConfigStateResult
     setNodeNoiseSigma,
     toggleBasecaseLock,
     toggleLoadConfigLock,
+    toggleTopologyTargetsLock,
   }
 }
