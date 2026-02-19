@@ -125,6 +125,8 @@ class GSGCNLayer(nn.Module):
         )
         phi_e = (delta * alpha - lambda_i * beta) / safe_den
         phi_f = (delta * beta + lambda_i * alpha) / safe_den
+        # TODO(physics-kernel): Integrate phi_e/phi_f into trainable output
+        # path; they are currently computed but not used in final activations.
         _ = (phi_e, phi_f)
 
         out_e = torch.matmul(node_features[..., :mid], self.W1) + self.B1

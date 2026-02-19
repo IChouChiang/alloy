@@ -122,6 +122,12 @@ $$
 
 ### Change Log
 
+- 2026-02-19: Added explicit TODO markers for normalization/metric/loss/physics gaps discovered in case39 forensic audit.
+  - TODO(normalization): materialized training path currently bypasses target z-score normalization.
+  - TODO(correlative-loss): correlative/combined loss exists but is not wired in benchmark training path.
+  - TODO(metric-scope): probabilistic accuracy currently aggregates over all buses; should be generator-bus scoped for paper alignment.
+  - TODO(physics-kernel): `GSGCNLayer` computes `phi_e`/`phi_f` but does not use them in final output path.
+
 - 2026-01-31: Consolidated status into this file and removed standalone step summaries.
   - Physics aggregation
   - Trainable transformations
